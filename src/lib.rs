@@ -13,16 +13,13 @@ mod tests {
     }
 }
 
-use std::{
-    collections::HashMap,
-    fs::{self},
-    path::PathBuf,
-};
+use std::{collections::HashMap, path::PathBuf};
 
 use chrono::NaiveDate;
-use markdown::to_html;
+use markdown::mdast::Node;
+use markdown::{to_html, to_mdast, ParseOptions};
 use serde::{Deserialize, Serialize};
-use std::io;
+use std::{fs, io};
 use walkdir::WalkDir;
 
 type Slug = String;
@@ -42,10 +39,11 @@ pub struct BlogEntry {
     pub html: String,
     pub slug: Slug,
     pub tags: Vec<String>,
+    pub toc: Option<String>,
 }
 
 impl BlogEntry {
-    pub fn new(json: BlogJson, html: String) -> Self {
+    pub fn new(json: BlogJson, html: String, toc: Option<String>) -> Self {
         return BlogEntry {
             title: json.title,
             date: json.date,
@@ -53,6 +51,7 @@ impl BlogEntry {
             html: html,
             slug: json.slug,
             tags: json.tags,
+            toc: toc,
         };
     }
 }
@@ -96,7 +95,10 @@ fn get_blog_paths(base: PathBuf) -> Result<Vec<PathBuf>, io::Error> {
     Ok(markdown_files)
 }
 
-pub fn get_blog_entries(base: PathBuf) -> Blog {
+pub fn get_blog_entries(
+    base: PathBuf,
+    toc_generation_func: Option<&dyn Fn(&Node) -> String>,
+) -> Blog {
     // TODO: Error
     let blog_paths = get_blog_paths(base).unwrap();
 
@@ -126,14 +128,20 @@ pub fn get_blog_entries(base: PathBuf) -> Blog {
 
         let these_tags = json_data.tags.clone();
 
-        let html = if name_split[1] == ".html" {
-            fs::read_to_string(blog).unwrap()
+        let markdown = fs::read_to_string(blog).unwrap();
+        let html = to_html(&markdown);
+
+        let toc = if toc_generation_func.is_some() {
+            let mdast = to_mdast(&markdown, &ParseOptions::default()).unwrap();
+
+            let toc_fn = toc_generation_func.unwrap();
+
+            Some(toc_fn(&mdast))
         } else {
-            let markdown = fs::read_to_string(blog).unwrap();
-            to_html(&markdown)
+            None
         };
 
-        let blog_entry = BlogEntry::new(json_data, html);
+        let blog_entry = BlogEntry::new(json_data, html, toc);
 
         hashes.insert(blog_entry.slug.clone(), blog_entry.clone());
         entires.push(blog_entry);
