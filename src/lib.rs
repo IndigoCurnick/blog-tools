@@ -35,11 +35,15 @@ pub struct Blog {
 pub struct BlogEntry {
     pub title: String,
     pub date: NaiveDate,
-    pub desc: String,
+    pub desc: Option<String>,
     pub html: String,
     pub slug: Slug,
     pub tags: Vec<String>,
     pub toc: Option<String>,
+    pub keywords: Option<Vec<String>>,
+    pub canonical_link: Option<String>,
+    pub author_name: Option<String>,
+    pub author_webpage: Option<String>,
 }
 
 impl BlogEntry {
@@ -52,17 +56,48 @@ impl BlogEntry {
             slug: json.slug,
             tags: json.tags,
             toc: toc,
+            keywords: json.keywords,
+            canonical_link: json.canonical_link,
+            author_name: json.author_name,
+            author_webpage: json.author_webpage,
         };
     }
+
+    pub fn to_meta(&self) -> BlogMeta {
+        return BlogMeta {
+            title: self.title.clone(),
+            date: self.date.clone(),
+            desc: self.desc.clone(),
+            keywords: self.keywords.clone(),
+            canonical_link: self.canonical_link.clone(),
+            author_name: self.author_name.clone(),
+            author_webpage: self.author_webpage.clone(),
+        };
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct BlogMeta {
+    pub title: String,
+    pub date: NaiveDate,
+    pub desc: Option<String>,
+    pub keywords: Option<Vec<String>>,
+    pub canonical_link: Option<String>,
+    pub author_name: Option<String>,
+    pub author_webpage: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BlogJson {
     pub title: String,
     pub date: NaiveDate,
-    pub desc: String,
+    pub desc: Option<String>,
     pub slug: String,
     pub tags: Vec<String>,
+    pub keywords: Option<Vec<String>>,
+    pub canonical_link: Option<String>,
+    pub author_name: Option<String>,
+    pub author_webpage: Option<String>,
 }
 
 fn get_blog_paths(base: PathBuf) -> Result<Vec<PathBuf>, io::Error> {
