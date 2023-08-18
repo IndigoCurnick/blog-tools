@@ -44,10 +44,11 @@ pub struct BlogEntry {
     pub canonical_link: Option<String>,
     pub author_name: Option<String>,
     pub author_webpage: Option<String>,
+    pub preview: String,
 }
 
 impl BlogEntry {
-    pub fn new(json: BlogJson, html: String, toc: Option<String>) -> Self {
+    pub fn new(json: BlogJson, html: String, toc: Option<String>, preview: String) -> Self {
         return BlogEntry {
             title: json.title,
             date: json.date,
@@ -60,6 +61,7 @@ impl BlogEntry {
             canonical_link: json.canonical_link,
             author_name: json.author_name,
             author_webpage: json.author_webpage,
+            preview: preview,
         };
     }
 
@@ -133,6 +135,7 @@ fn get_blog_paths(base: PathBuf) -> Result<Vec<PathBuf>, io::Error> {
 pub fn get_blog_entries(
     base: PathBuf,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
+    preview_chars: Option<usize>,
 ) -> Blog {
     // TODO: Error
     let blog_paths = get_blog_paths(base).unwrap();
@@ -164,6 +167,12 @@ pub fn get_blog_entries(
         let these_tags = json_data.tags.clone();
 
         let markdown = fs::read_to_string(blog).unwrap();
+
+        let num_chars = match preview_chars {
+            Some(x) => x,
+            None => 300,
+        };
+        let preview: String = markdown.chars().take(num_chars).collect();
         let html = to_html(&markdown);
 
         let toc = if toc_generation_func.is_some() {
@@ -176,7 +185,7 @@ pub fn get_blog_entries(
             None
         };
 
-        let blog_entry = BlogEntry::new(json_data, html, toc);
+        let blog_entry = BlogEntry::new(json_data, html, toc, preview);
 
         hashes.insert(blog_entry.slug.clone(), blog_entry.clone());
         entires.push(blog_entry);
