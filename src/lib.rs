@@ -170,10 +170,11 @@ pub fn get_blog_entries(
 
         let num_chars = match preview_chars {
             Some(x) => x,
-            None => 300,
+            None => 320,
         };
-        let preview: String = markdown.chars().take(num_chars).collect();
+
         let html = to_html(&markdown);
+        let preview: String = html.chars().take(num_chars).collect();
 
         let toc = if toc_generation_func.is_some() {
             let mdast = to_mdast(&markdown, &ParseOptions::default()).unwrap();
