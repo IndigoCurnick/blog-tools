@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>{{ blog.title }}</title>
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {% if blog.author_name %}
+    <meta name="author" content="{{ blog.author_name }}">
+    {% endif %}
+
+    {% if blog.author_webpage %}
+    <link rel="author" href="{{ blog.author_webpage }}">
+    {% endif %}
+
+    {% if blog.keywords %}
+    <meta name="keywords" content="
+    {% for word in blog.keywords %}
+    {{word}},
+    {% endfor %}
+    ">
+    {% endif %}
+
+    {% if blog.desc %}
+    <meta name="description" content="{{ blog.desc }}">
+    {% endif %}
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+    <main>
+
+        {{ blog.html | safe }}
+
+    </main>
+
+    <script src="/js/highlight/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+
+</body>
+
+</html>

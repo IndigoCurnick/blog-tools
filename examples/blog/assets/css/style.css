@@ -1,0 +1,38 @@
+.blog-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    gap: 2rem;
+    max-width: 1200px;
+}
+
+.blog-card {
+    display: flex;
+    flex-direction: column;
+    width: clamp(20rem, calc(20rem + 2vw), 22rem);
+    box-shadow: 0 .1rem 1rem rgba(0, 0, 0, 0.1);
+    border-radius: 1em;
+    background: #f4f4f4;
+    overflow: hidden;
+    flex-grow: 1;
+    padding: .25em .75em;
+    border-radius: 1em;
+    border: solid 1px black;
+}
+
+.blog-card:hover {
+    background: pink;
+}
+
+.blog-tag-container {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.blog-tag {
+    padding: .25em .75em;
+    border-radius: 1em;
+    font-size: 1rem;
+    background: linear-gradient(135deg, #cccccc, #ffffff);
+    color: blue;
+}
