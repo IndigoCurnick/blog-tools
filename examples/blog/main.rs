@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-use blog_tools::{get_blog_entries, Blog, BlogEntry};
+use blog_tools::{get_blog, Blog, BlogEntry};
 use lazy_static::lazy_static;
 use rocket::{
     fs::{relative, FileServer},
@@ -95,8 +95,7 @@ fn get_all_routes() -> Vec<Route> {
 pub static BLOG_ROOT: &str = "examples/blog/post";
 
 lazy_static! {
-    pub static ref STATIC_BLOG_ENTRIES: Blog =
-        get_blog_entries(PathBuf::from(BLOG_ROOT), None, None);
+    pub static ref STATIC_BLOG_ENTRIES: Blog = get_blog(PathBuf::from(BLOG_ROOT), None, None);
 }
 
 fn get_blog_context() -> &'static Blog {
