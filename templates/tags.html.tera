@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Tags</title>
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+    <header>
+        <h1>#{{ tag }}</h1>
+    </header>
+    <main>
+
+
+        {% if blogs %}
+
+        <div class="blog-container">
+            {% for entry in blogs %}
+
+            <div class="blog-card">
+                <a href="/blog/{{ entry.slug }}" class="no-underline black-links">
+                    <div class="card-body">
+                        <h5>
+                            <span>{{ entry.date }}</span>
+                        </h5>
+                        <div>
+                            {{entry.preview | safe}}
+                        </div>
+                    </div>
+                </a>
+
+                <div class="blog-tag-container">
+                    {% for tag in entry.tags %}
+                    <a href="/blog/tag/{{ tag }}" class="blog-tag">#{{ tag }}</a>
+                    {% endfor %}
+                </div>
+
+            </div>
+
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <p>No blog found</p>
+
+        {% endif %}
+    </main>
+</body>

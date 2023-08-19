@@ -1,7 +1,14 @@
 [package]
 name = "blog-tools"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
+authors = ["Nathaniel Curnick <nathaniel.curnick@gmail.com>"]
+description = "A collection of tools that helps make blogs in Rust"
+readme = "README.md"
+repository = "https://github.com/NathanielCurnick/blog-tools"
+license = "MIT"
+keywords = ["blog", "website", "rocket", "templates"]
+categories = ["web-programming"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -11,3 +18,11 @@ serde_json = "1.0.77"
 walkdir = "2.3.2"
 chrono = { version = "0.4.23", features = ["serde"] }
 markdown = "1.0.0-alpha.11"
+
+[dev-dependencies]
+tokio = { version = "1.29.1", features = ["full"] }
+tera = "1.15.0"
+rocket = "0.5.0-rc.3"
+rocket_codegen = "0.4.4"
+rocket_dyn_templates = { version = "0.1.0-rc.1", features = ["tera"] }
+lazy_static = "1.4.0"

@@ -1,0 +1,20 @@
+{
+    "title": "My Second Blog",
+    "date": "2023-08-19",
+    "desc": "Another blog!",
+    "slug": "second-blog",
+    "tags": [
+        "programming",
+        "blog",
+        "math"
+    ],
+    "keywords": [
+        "blog",
+        "second",
+        "time",
+        "paper",
+        "rock"
+    ],
+    "author_name": "Nathaniel Curnick",
+    "author_website": "https://nathanielcurnick.xyz"
+}

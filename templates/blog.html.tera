@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>{{ blog.title }}</title>
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {% if blog.author_name %}
+    <meta name="author" content="{{ blog.author_name }}">
+    {% endif %}
+
+    {% if blog.author_webpage %}
+    <link rel="author" href="{{ blog.author_webpage }}">
+    {% endif %}
+
+    {% if blog.keywords %}
+    <meta name="keywords" content="
+    {% for word in blog.keywords %}
+    {{word}},
+    {% endfor %}
+    ">
+    {% endif %}
+
+    {% if blog.desc %}
+    <meta name="description" content="{{ blog.desc }}">
+    {% endif %}
+</head>
+
+<body>
+    <main>
+
+        {{ blog.html | safe }}
+
+    </main>
+
+</body>
+
+</html>
