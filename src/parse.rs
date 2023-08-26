@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs, io, path::PathBuf};
 
-use markdown::{mdast::Node, to_html, to_mdast, ParseOptions};
+use markdown::{mdast::Node, to_html, to_html_with_options, to_mdast, Options, ParseOptions};
 
 use crate::{
     find::get_blog_paths,
@@ -58,7 +58,19 @@ fn foo(
     let markdown = fs::read_to_string(blog).unwrap();
 
     let preview: String = get_preview(&markdown, preview_chars);
-    let html = to_html(&markdown);
+    let html = to_html_with_options(
+        &markdown,
+        &Options {
+            compile: markdown::CompileOptions {
+                allow_dangerous_html: true,
+                allow_dangerous_protocol: true,
+
+                ..markdown::CompileOptions::default()
+            },
+            ..markdown::Options::default()
+        },
+    )
+    .unwrap();
 
     let toc = toc(&markdown, toc_generation_func);
 
