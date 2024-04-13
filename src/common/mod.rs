@@ -1,3 +1,3 @@
 mod types;
 
-pub use types::{Blog, BlogEntry, BlogJson};
+pub use types::{BlogEntry, BlogJson};

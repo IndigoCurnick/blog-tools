@@ -2,7 +2,7 @@ use std::{collections::HashMap, fs, io, path::PathBuf};
 
 use markdown::{mdast::Node, to_html, to_html_with_options, to_mdast, Options, ParseOptions};
 
-use crate::{common::BlogJson, Blog, BlogEntry};
+use crate::{common::BlogJson, BlogEntry, HighBlog};
 
 use super::find::get_blog_paths;
 
@@ -10,7 +10,7 @@ pub fn get_blog_entries(
     base: PathBuf,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
     preview_chars: Option<usize>,
-) -> Blog {
+) -> HighBlog {
     let blog_paths = get_blog_paths(base).unwrap();
 
     let mut hashes: HashMap<String, BlogEntry> = HashMap::new();
@@ -18,7 +18,7 @@ pub fn get_blog_entries(
     let mut tags: Vec<String> = vec![];
 
     for blog in blog_paths {
-        foo(
+        process_blogs(
             &blog,
             &mut hashes,
             &mut entries,
@@ -28,14 +28,14 @@ pub fn get_blog_entries(
         )
     }
 
-    return Blog {
+    return HighBlog {
         hash: hashes,
         entries: entries,
         tags: tags,
     };
 }
 
-fn foo(
+fn process_blogs(
     blog: &PathBuf,
     hashes: &mut HashMap<String, BlogEntry>,
     entries: &mut Vec<BlogEntry>,

@@ -1,33 +1,5 @@
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
-/// The main `Blog` which stores all relevant information for the blog
-///
-/// `hash` contains a map from the url slug defined in the `BlogJson` to the
-/// `BlogEntry`
-///
-/// `entries` contains a date-sorted `Vec` of `BlogEntry`. Note that `entries`
-/// and `hash` contain the same information but in different formats for
-/// performance reasons
-///
-/// `tags` is an unsorted `Vec` of all unique tags used in the blog
-///
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Blog {
-    /// URL slug to individual blog
-    ///
-    /// Useful when you have a GET request to /blog/\<slug\>
-    pub hash: HashMap<String, BlogEntry>,
-    /// `Vec` of blog posts, sorted by date
-    ///
-    /// Useful when you want to list all blog posts e.g. on an index page
-    pub entries: Vec<BlogEntry>,
-    /// `Vec` of all unique tags
-    ///
-    /// Useful when you want to list all tags e.g. on an index page
-    pub tags: Vec<String>,
-}
 
 /// An individual blog post
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -65,7 +37,7 @@ impl BlogEntry {
             date: json.date,
             desc: json.desc,
             html: html,
-            slug: json.slug,
+            slug: format!("{}/{}", json.date, json.slug),
             tags: json.tags,
             toc: toc,
             keywords: json.keywords,

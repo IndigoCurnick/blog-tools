@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use blog_tools::{get_high_blog, Blog, BlogEntry};
+use blog_tools::{get_high_blog, BlogEntry, HighBlog};
 use lazy_static::lazy_static;
 use rocket::{
     fs::{relative, FileServer},
@@ -41,11 +41,12 @@ fn blog_index() -> Option<Template> {
     Some(Template::render("blog_index", context.into_json()))
 }
 
-#[get("/blog/<slug>")]
-fn blog_article(slug: String) -> Option<Template> {
+#[get("/blog/<date>/<slug>")]
+fn blog_article(date: String, slug: String) -> Option<Template> {
     let mut context = rocket_dyn_templates::tera::Context::new();
     let all_blogs = get_blog_context();
-    let this_blog = match all_blogs.hash.get(&slug) {
+    let complete_slug = format!("{}/{}", date, slug);
+    let this_blog = match all_blogs.hash.get(&complete_slug) {
         Some(x) => x,
         None => return None,
     };
@@ -53,7 +54,7 @@ fn blog_article(slug: String) -> Option<Template> {
     Some(Template::render("blog", context.into_json()))
 }
 
-#[get("/blog/tag/<slug>")]
+#[get("/blog/tag/<slug>", rank = 2)]
 fn tag_page(slug: String) -> Option<Template> {
     let mut context = rocket_dyn_templates::tera::Context::new();
     let all_blogs = get_blog_context();
@@ -92,9 +93,10 @@ fn get_all_routes() -> Vec<Route> {
 pub static BLOG_ROOT: &str = "examples/blog";
 
 lazy_static! {
-    pub static ref STATIC_BLOG_ENTRIES: Blog = get_high_blog(PathBuf::from(BLOG_ROOT), None, None);
+    pub static ref STATIC_BLOG_ENTRIES: HighBlog =
+        get_high_blog(PathBuf::from(BLOG_ROOT), None, None);
 }
 
-fn get_blog_context() -> &'static Blog {
+fn get_blog_context() -> &'static HighBlog {
     return &STATIC_BLOG_ENTRIES;
 }
