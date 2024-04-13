@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use blog_tools::{get_blog, Blog, BlogEntry};
+use blog_tools::{get_high_blog, Blog, BlogEntry};
 use lazy_static::lazy_static;
 use rocket::{
     fs::{relative, FileServer},
@@ -21,7 +21,7 @@ async fn main() {
         .merge(("address", "0.0.0.0"));
 
     if let Err(e) = rocket::custom(figment)
-        .mount("/", FileServer::from(relative!("examples/blog/assets/")))
+        .mount("/", FileServer::from(relative!("examples/assets/")))
         .register("/", catchers![not_found, error])
         .attach(Template::fairing())
         // .attach(config)
@@ -89,10 +89,10 @@ fn get_all_routes() -> Vec<Route> {
     return routes![blog_index, blog_article, tag_page];
 }
 
-pub static BLOG_ROOT: &str = "examples/blog/post";
+pub static BLOG_ROOT: &str = "examples/blog";
 
 lazy_static! {
-    pub static ref STATIC_BLOG_ENTRIES: Blog = get_blog(PathBuf::from(BLOG_ROOT), None, None);
+    pub static ref STATIC_BLOG_ENTRIES: Blog = get_high_blog(PathBuf::from(BLOG_ROOT), None, None);
 }
 
 fn get_blog_context() -> &'static Blog {

@@ -2,10 +2,9 @@ use std::{collections::HashMap, fs, io, path::PathBuf};
 
 use markdown::{mdast::Node, to_html, to_html_with_options, to_mdast, Options, ParseOptions};
 
-use crate::{
-    find::get_blog_paths,
-    types::{Blog, BlogEntry, BlogJson},
-};
+use crate::{common::BlogJson, Blog, BlogEntry};
+
+use super::find::get_blog_paths;
 
 pub fn get_blog_entries(
     base: PathBuf,
