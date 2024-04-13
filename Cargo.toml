@@ -22,7 +22,7 @@ markdown = "1.0.0-alpha.11"
 [dev-dependencies]
 tokio = { version = "1.29.1", features = ["full"] }
 tera = "1.15.0"
-rocket = "0.5.0-rc.3"
-rocket_codegen = "0.4.4"
-rocket_dyn_templates = { version = "0.1.0-rc.1", features = ["tera"] }
+rocket = "0.5.0"
+rocket_codegen = "0.5.0"
+rocket_dyn_templates = { version = "0.1.0", features = ["tera"] }
 lazy_static = "1.4.0"

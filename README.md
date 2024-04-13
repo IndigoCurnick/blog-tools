@@ -48,8 +48,7 @@ lazy_static! {
 You can run the example blog with
 
 ```
-cargo +nightly run --example blog  
+cargo run --example blog  
 ```
 
-For now Rocket requires the use of nightly toolchains. You can then view the 
-blog at localhost:8080
+You can then view the blog at localhost:8080

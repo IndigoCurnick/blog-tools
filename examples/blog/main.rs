@@ -1,5 +1,3 @@
-#![feature(proc_macro_hygiene, decl_macro)]
-
 use std::path::PathBuf;
 
 use blog_tools::{get_blog, Blog, BlogEntry};
@@ -45,7 +43,6 @@ fn blog_index() -> Option<Template> {
 
 #[get("/blog/<slug>")]
 fn blog_article(slug: String) -> Option<Template> {
-    // TODO: database entries in here
     let mut context = rocket_dyn_templates::tera::Context::new();
     let all_blogs = get_blog_context();
     let this_blog = match all_blogs.hash.get(&slug) {
