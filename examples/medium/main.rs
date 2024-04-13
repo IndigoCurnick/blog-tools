@@ -1,6 +1,6 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, str::FromStr};
 
-use blog_tools::{get_high_blog, HighBlog, HighBlogEntry};
+use blog_tools::{get_medium_blog, MediumBlog, MediumBlogEntry};
 use lazy_static::lazy_static;
 use rocket::{
     fs::{relative, FileServer},
@@ -50,7 +50,13 @@ fn blog_article(date: String, slug: String) -> Option<Template> {
         Some(x) => x,
         None => return None,
     };
-    context.insert("blog", this_blog);
+
+    context.insert(
+        "blog",
+        &this_blog
+            .render(PathBuf::from_str(BLOG_ROOT).unwrap())
+            .unwrap(),
+    );
     Some(Template::render("blog", context.into_json()))
 }
 
@@ -59,7 +65,7 @@ fn tag_page(slug: String) -> Option<Template> {
     let mut context = rocket_dyn_templates::tera::Context::new();
     let all_blogs = get_blog_context();
 
-    let mut these_blogs: Vec<&HighBlogEntry> = vec![];
+    let mut these_blogs: Vec<&MediumBlogEntry> = vec![];
 
     for blog in &all_blogs.entries {
         if blog.tags.contains(&slug) {
@@ -93,10 +99,10 @@ fn get_all_routes() -> Vec<Route> {
 pub static BLOG_ROOT: &str = "examples/blog";
 
 lazy_static! {
-    pub static ref STATIC_BLOG_ENTRIES: HighBlog =
-        get_high_blog(PathBuf::from(BLOG_ROOT), None, None);
+    pub static ref STATIC_BLOG_ENTRIES: MediumBlog =
+        get_medium_blog(PathBuf::from(BLOG_ROOT), None, None);
 }
 
-fn get_blog_context() -> &'static HighBlog {
+fn get_blog_context() -> &'static MediumBlog {
     return &STATIC_BLOG_ENTRIES;
 }

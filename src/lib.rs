@@ -44,6 +44,8 @@
 
 mod common;
 mod high;
+mod low;
+mod medium;
 
-pub use common::BlogEntry;
-pub use high::{get_high_blog, HighBlog};
+pub use high::{get_high_blog, HighBlog, HighBlogEntry};
+pub use medium::{get_medium_blog, MediumBlog, MediumBlogEntry};

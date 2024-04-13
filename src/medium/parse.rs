@@ -1,21 +1,20 @@
 use std::{collections::HashMap, fs, path::PathBuf};
 
-use markdown::{mdast::Node, to_html_with_options, Options};
+use markdown::mdast::Node;
 
-use crate::{
-    common::{get_blog_paths, get_json_data, get_preview, toc},
-    HighBlog, HighBlogEntry,
-};
+use crate::common::{get_blog_paths, get_json_data, get_preview, toc};
+
+use super::{MediumBlog, MediumBlogEntry};
 
 pub fn get_blog_entries(
     base: PathBuf,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
     preview_chars: Option<usize>,
-) -> HighBlog {
+) -> MediumBlog {
     let blog_paths = get_blog_paths(base).unwrap();
 
-    let mut hashes: HashMap<String, HighBlogEntry> = HashMap::new();
-    let mut entries: Vec<HighBlogEntry> = vec![];
+    let mut hashes: HashMap<String, MediumBlogEntry> = HashMap::new();
+    let mut entries: Vec<MediumBlogEntry> = vec![];
     let mut tags: Vec<String> = vec![];
 
     for blog in blog_paths {
@@ -29,7 +28,7 @@ pub fn get_blog_entries(
         )
     }
 
-    return HighBlog {
+    return MediumBlog {
         hash: hashes,
         entries: entries,
         tags: tags,
@@ -38,8 +37,8 @@ pub fn get_blog_entries(
 
 fn process_blogs(
     blog: &PathBuf,
-    hashes: &mut HashMap<String, HighBlogEntry>,
-    entries: &mut Vec<HighBlogEntry>,
+    hashes: &mut HashMap<String, MediumBlogEntry>,
+    entries: &mut Vec<MediumBlogEntry>,
     tags: &mut Vec<String>,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
     preview_chars: Option<usize>,
@@ -58,23 +57,12 @@ fn process_blogs(
     let markdown = fs::read_to_string(blog).unwrap();
 
     let preview: String = get_preview(&markdown, preview_chars);
-    let html = to_html_with_options(
-        &markdown,
-        &Options {
-            compile: markdown::CompileOptions {
-                allow_dangerous_html: true,
-                allow_dangerous_protocol: true,
-
-                ..markdown::CompileOptions::default()
-            },
-            ..markdown::Options::default()
-        },
-    )
-    .unwrap();
 
     let toc = toc(&markdown, toc_generation_func);
 
-    let blog_entry = HighBlogEntry::new(json_data, html, toc, preview);
+    let file_name = blog.file_name().unwrap().to_str().unwrap().to_string();
+
+    let blog_entry = MediumBlogEntry::new(json_data, toc, preview, file_name);
 
     hashes.insert(blog_entry.slug.clone(), blog_entry.clone());
     entries.push(blog_entry);
