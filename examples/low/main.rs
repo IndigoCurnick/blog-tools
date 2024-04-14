@@ -1,13 +1,16 @@
-use std::path::PathBuf;
-
-use blog_tools::{get_blog, Blog, BlogEntry};
-use lazy_static::lazy_static;
+use blog_tools::low::{
+    get_blog_tag_list, preview_blogs, preview_blogs_tagged, render_blog_post, PreviewBlogEntry,
+};
 use rocket::{
     fs::{relative, FileServer},
     response::Redirect,
     Request, Route,
 };
 use rocket_dyn_templates::Template;
+use serde::{Deserialize, Serialize};
+use std::{path::PathBuf, str::FromStr};
+
+pub static BLOG_ROOT: &str = "examples/blog";
 
 #[macro_use]
 extern crate rocket;
@@ -21,7 +24,7 @@ async fn main() {
         .merge(("address", "0.0.0.0"));
 
     if let Err(e) = rocket::custom(figment)
-        .mount("/", FileServer::from(relative!("examples/blog/assets/")))
+        .mount("/", FileServer::from(relative!("examples/assets/")))
         .register("/", catchers![not_found, error])
         .attach(Template::fairing())
         // .attach(config)
@@ -36,38 +39,45 @@ async fn main() {
 
 #[get("/blog")]
 fn blog_index() -> Option<Template> {
+    // I only use this dummy struct to keep consistency with the other two blog modes
+    #[derive(Serialize, Deserialize)]
+    struct Blogs {
+        entries: Vec<PreviewBlogEntry>,
+        tags: Vec<String>,
+    }
+
     let mut context = rocket_dyn_templates::tera::Context::new();
-    context.insert("blog", get_blog_context());
+
+    let preview = preview_blogs(PathBuf::from_str(BLOG_ROOT).unwrap(), 2, None);
+    let tags = get_blog_tag_list(PathBuf::from_str(BLOG_ROOT).unwrap());
+    context.insert(
+        "blog",
+        &Blogs {
+            entries: preview,
+            tags,
+        },
+    );
     Some(Template::render("blog_index", context.into_json()))
 }
 
-#[get("/blog/<slug>")]
-fn blog_article(slug: String) -> Option<Template> {
+#[get("/blog/<date>/<slug>", rank = 2)]
+fn blog_article(date: String, slug: String) -> Option<Template> {
     let mut context = rocket_dyn_templates::tera::Context::new();
-    let all_blogs = get_blog_context();
-    let this_blog = match all_blogs.hash.get(&slug) {
-        Some(x) => x,
-        None => return None,
-    };
-    context.insert("blog", this_blog);
+    let blog_post =
+        render_blog_post(PathBuf::from_str(BLOG_ROOT).unwrap(), date, slug, None).unwrap();
+
+    context.insert("blog", &blog_post);
     Some(Template::render("blog", context.into_json()))
 }
 
 #[get("/blog/tag/<slug>")]
 fn tag_page(slug: String) -> Option<Template> {
     let mut context = rocket_dyn_templates::tera::Context::new();
-    let all_blogs = get_blog_context();
-
-    let mut these_blogs: Vec<&BlogEntry> = vec![];
-
-    for blog in &all_blogs.entries {
-        if blog.tags.contains(&slug) {
-            these_blogs.push(&blog);
-        }
-    }
-
-    context.insert("blogs", &these_blogs);
     context.insert("tag", &slug);
+    let all_blogs = preview_blogs_tagged(PathBuf::from_str(BLOG_ROOT).unwrap(), slug, None);
+
+    context.insert("blogs", &all_blogs);
+
     Some(Template::render("tags", context.into_json()))
 }
 
@@ -87,14 +97,4 @@ async fn error(req: &Request<'_>) -> Redirect {
 
 fn get_all_routes() -> Vec<Route> {
     return routes![blog_index, blog_article, tag_page];
-}
-
-pub static BLOG_ROOT: &str = "examples/blog/post";
-
-lazy_static! {
-    pub static ref STATIC_BLOG_ENTRIES: Blog = get_blog(PathBuf::from(BLOG_ROOT), None, None);
-}
-
-fn get_blog_context() -> &'static Blog {
-    return &STATIC_BLOG_ENTRIES;
 }

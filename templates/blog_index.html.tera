@@ -14,8 +14,8 @@
         <h1>Blog</h1>
     </header>
     <main>
-
-
+        <p><code>blog-tools</code> has many features - let's go over them now!</p>
+        <p><code>blog-tools</code> supports date sorted blog posts, with little previews</p>
         {% if blog.entries %}
 
         <div class="blog-container">
@@ -33,7 +33,9 @@
                     </div>
                 </a>
 
+                <p><code>blog-tools</code> also supports tags - try clicking one!</p>
                 <div class="blog-tag-container">
+
                     {% for tag in entry.tags %}
                     <a href="/blog/tag/{{ tag }}" class="blog-tag">#{{ tag }}</a>
                     {% endfor %}
@@ -47,5 +49,13 @@
         <p>No blog found</p>
 
         {% endif %}
+
+        <p>You can also easily display all the tags - try clicking one!</p>
+        <div class="blog-tag-container">
+
+            {% for tag in blog.tags %}
+            <a href="/blog/tag/{{ tag }}" class="blog-tag">#{{ tag }}</a>
+            {% endfor %}
+        </div>
     </main>
 </body>

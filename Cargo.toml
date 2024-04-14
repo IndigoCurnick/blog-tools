@@ -1,16 +1,14 @@
 [package]
 name = "blog-tools"
-version = "0.0.2"
+version = "0.0.3"
 edition = "2021"
-authors = ["Nathaniel Curnick <nathaniel.curnick@gmail.com>"]
+authors = ["Indigo Curnick <indigocurnick@gmail.com>"]
 description = "A collection of tools that helps make blogs in Rust"
 readme = "README.md"
-repository = "https://github.com/NathanielCurnick/blog-tools"
+repository = "https://github.com/IndigoCurnick/blog-tools"
 license = "MIT"
 keywords = ["blog", "website", "rocket", "templates"]
 categories = ["web-programming"]
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 serde = { version = "1.0.134", features = ["derive"] }
