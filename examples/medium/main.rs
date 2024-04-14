@@ -1,6 +1,6 @@
 use std::{path::PathBuf, str::FromStr};
 
-use blog_tools::{get_medium_blog, MediumBlog, MediumBlogEntry};
+use blog_tools::medium::{get_medium_blog, MediumBlog, MediumBlogEntry};
 use lazy_static::lazy_static;
 use rocket::{
     fs::{relative, FileServer},

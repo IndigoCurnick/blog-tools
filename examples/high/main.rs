@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use blog_tools::{get_high_blog, HighBlog, HighBlogEntry};
+use blog_tools::high::{get_high_blog, HighBlog, HighBlogEntry};
 use lazy_static::lazy_static;
 use rocket::{
     fs::{relative, FileServer},

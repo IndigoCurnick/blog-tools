@@ -9,7 +9,7 @@ use self::parse::get_blog_entries;
 
 mod parse;
 
-/// Gets the whole `Blog` from the specified path. Useful to combine with lazy
+/// Gets the whole `HighBlog` from the specified path. Useful to combine with lazy
 /// static for loading times
 ///
 /// The path should be a folder which contains markdown files next to json files
@@ -36,12 +36,12 @@ pub fn get_high_blog(
 
 /// The main `HighBlog` which stores all relevant information for the blog
 ///
-/// `hash` contains a map from the url slug defined in the `BlogJson` to the
-/// `BlogEntry`
+/// `hash` contains a map from the url slug, which is constructed from the
+/// "slug" field in the `BlogJson` and the date, to the `BlogEntry`
 ///
-/// `entries` contains a date-sorted `Vec` of `BlogEntry`. Note that `entries`
-/// and `hash` contain the same information but in different formats for
-/// performance reasons
+/// `entries` contains a date-sorted (newest first) `Vec` of `BlogEntry`.
+/// Note that `entries` and `hash` contain the same information
+/// but in different formats for performance reasons
 ///
 /// `tags` is an unsorted `Vec` of all unique tags used in the blog
 ///
@@ -49,7 +49,7 @@ pub fn get_high_blog(
 pub struct HighBlog {
     /// URL slug to individual blog
     ///
-    /// Useful when you have a GET request to /blog/\<slug\>
+    /// Useful when you have a GET request to /blog/\<date\>/\<slug\>
     pub hash: HashMap<String, HighBlogEntry>,
     /// `Vec` of blog posts, sorted by date
     ///

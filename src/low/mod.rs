@@ -5,11 +5,14 @@ use markdown::{mdast::Node, to_html_with_options, Options};
 use serde::{Deserialize, Serialize};
 use walkdir::WalkDir;
 
-use crate::{
-    common::{get_json_data, get_preview, toc, BlogJson},
-    HighBlogEntry,
-};
+use crate::common::{get_json_data, get_preview, toc, BlogJson};
 
+/// Use this function to get a list of all unique tags in your blog
+///
+/// WARNING: With many blogs this function could become extremely slow -
+/// maybe consider caching this? Even though this is the no-cache option, a list
+/// of single word strings isn't that large. If even this is too large to fit in
+/// memory, you probably need a database rather than this crate
 pub fn get_blog_tag_list(base: PathBuf) -> Vec<String> {
     let mut tags = vec![];
 
@@ -52,6 +55,11 @@ pub fn get_blog_tag_list(base: PathBuf) -> Vec<String> {
     return tags;
 }
 
+/// This function will find all of the blogs with the specified tag, so they
+/// can be previewed (e.g. on a tag index page). They won't contain the full HTML
+/// of the blog, only a preview.
+///
+/// Control the legnth of the preview with `preview_length`. Default is 320 chars
 pub fn preview_blogs_tagged(
     base: PathBuf,
     tag: String,
@@ -94,6 +102,14 @@ pub fn preview_blogs_tagged(
     return blogs;
 }
 
+/// Renders an individual blog post.
+///
+/// Provide the date of the blog post and the slug (the slug as found in the
+/// "slug" field of the JSON).
+///
+/// Optionally, provide a table of contents generation function
+///
+/// Returns `None` if the specified blog can not be found
 pub fn render_blog_post(
     base: PathBuf,
     date: String,
@@ -151,6 +167,11 @@ pub fn render_blog_post(
     return None;
 }
 
+/// Previews blogs for an index page. Will order from newest to oldest
+///
+/// `num` controls how many blogs will be in the preview
+///
+/// `preview_length` is how long each preview will be. Default is 320 chars
 pub fn preview_blogs(
     base: PathBuf,
     num: usize,

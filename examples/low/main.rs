@@ -1,8 +1,6 @@
-use blog_tools::{
-    get_blog_tag_list, get_medium_blog, preview_blogs, preview_blogs_tagged, render_blog_post,
-    MediumBlog, MediumBlogEntry, PreviewBlogEntry,
+use blog_tools::low::{
+    get_blog_tag_list, preview_blogs, preview_blogs_tagged, render_blog_post, PreviewBlogEntry,
 };
-use lazy_static::lazy_static;
 use rocket::{
     fs::{relative, FileServer},
     response::Redirect,
@@ -65,9 +63,10 @@ fn blog_index() -> Option<Template> {
 #[get("/blog/<date>/<slug>", rank = 2)]
 fn blog_article(date: String, slug: String) -> Option<Template> {
     let mut context = rocket_dyn_templates::tera::Context::new();
-    let blog = render_blog_post(PathBuf::from_str(BLOG_ROOT).unwrap(), date, slug, None).unwrap();
+    let blog_post =
+        render_blog_post(PathBuf::from_str(BLOG_ROOT).unwrap(), date, slug, None).unwrap();
 
-    context.insert("blog", &blog);
+    context.insert("blog", &blog_post);
     Some(Template::render("blog", context.into_json()))
 }
 
