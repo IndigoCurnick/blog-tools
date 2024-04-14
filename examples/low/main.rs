@@ -1,6 +1,6 @@
 use blog_tools::{
-    get_medium_blog, preview_blogs, preview_blogs_tagged, render_blog_post, MediumBlog,
-    MediumBlogEntry, PreviewBlogEntry,
+    get_blog_tag_list, get_medium_blog, preview_blogs, preview_blogs_tagged, render_blog_post,
+    MediumBlog, MediumBlogEntry, PreviewBlogEntry,
 };
 use lazy_static::lazy_static;
 use rocket::{
@@ -45,13 +45,20 @@ fn blog_index() -> Option<Template> {
     #[derive(Serialize, Deserialize)]
     struct Blogs {
         entries: Vec<PreviewBlogEntry>,
+        tags: Vec<String>,
     }
 
     let mut context = rocket_dyn_templates::tera::Context::new();
 
     let preview = preview_blogs(PathBuf::from_str(BLOG_ROOT).unwrap(), 2, None);
-    println!("{:?}", preview);
-    context.insert("blog", &Blogs { entries: preview });
+    let tags = get_blog_tag_list(PathBuf::from_str(BLOG_ROOT).unwrap());
+    context.insert(
+        "blog",
+        &Blogs {
+            entries: preview,
+            tags,
+        },
+    );
     Some(Template::render("blog_index", context.into_json()))
 }
 

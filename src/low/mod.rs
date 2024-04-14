@@ -11,7 +11,45 @@ use crate::{
 };
 
 pub fn get_blog_tag_list(base: PathBuf) -> Vec<String> {
-    todo!();
+    let mut tags = vec![];
+
+    for entry in WalkDir::new(base) {
+        let entry = entry.unwrap();
+
+        let path = entry.path();
+
+        let extension = match path.extension() {
+            Some(x) => x.to_str().unwrap(),
+            None => continue,
+        };
+
+        if extension != "json" {
+            continue;
+        }
+
+        let parent = path.parent().unwrap();
+        let file_name = path.file_name().unwrap().to_str().unwrap();
+
+        let md_file_name = file_name.replace(".json", ".md");
+
+        let md_file_path = parent.join(md_file_name);
+
+        if !md_file_path.exists() {
+            continue;
+        }
+
+        let path = path.to_path_buf();
+
+        let json_text = get_json_data(&path).unwrap();
+
+        for tag in &json_text.tags {
+            if !tags.contains(tag) {
+                tags.push(tag.clone())
+            }
+        }
+    }
+
+    return tags;
 }
 
 pub fn preview_blogs_tagged(
