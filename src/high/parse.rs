@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, path::PathBuf};
+use std::{collections::HashMap, fs, path::Path};
 
 use markdown::{mdast::Node, to_html_with_options, Options};
 
@@ -6,8 +6,8 @@ use crate::common::{get_blog_paths, get_json_data, get_preview, toc};
 
 use super::{HighBlog, HighBlogEntry};
 
-pub fn get_blog_entries(
-    base: PathBuf,
+pub fn get_blog_entries<T: AsRef<Path>>(
+    base: T,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
     preview_chars: Option<usize>,
 ) -> HighBlog {
@@ -35,14 +35,15 @@ pub fn get_blog_entries(
     };
 }
 
-fn process_blogs(
-    blog: &PathBuf,
+fn process_blogs<T: AsRef<Path>>(
+    blog: T,
     hashes: &mut HashMap<String, HighBlogEntry>,
     entries: &mut Vec<HighBlogEntry>,
     tags: &mut Vec<String>,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
     preview_chars: Option<usize>,
 ) {
+    let blog = blog.as_ref();
     let json_data = match get_json_data(blog) {
         Ok(x) => x,
         Err(_y) => return,

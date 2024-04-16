@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use markdown::mdast::Node;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, path::Path};
 
 use crate::common::BlogJson;
 
@@ -26,8 +26,8 @@ mod parse;
 /// }
 /// ```
 ///
-pub fn get_high_blog(
-    base: PathBuf,
+pub fn get_high_blog<T: AsRef<Path>>(
+    base: T,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
     preview_chars: Option<usize>,
 ) -> HighBlog {

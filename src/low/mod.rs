@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf};
+use std::{fs, path::Path};
 
 use chrono::NaiveDate;
 use markdown::{mdast::Node, to_html_with_options, Options};
@@ -13,7 +13,7 @@ use crate::common::{get_json_data, get_preview, toc, BlogJson};
 /// maybe consider caching this? Even though this is the no-cache option, a list
 /// of single word strings isn't that large. If even this is too large to fit in
 /// memory, you probably need a database rather than this crate
-pub fn get_blog_tag_list(base: PathBuf) -> Vec<String> {
+pub fn get_blog_tag_list<T: AsRef<Path>>(base: T) -> Vec<String> {
     let mut tags = vec![];
 
     for entry in WalkDir::new(base) {
@@ -60,8 +60,8 @@ pub fn get_blog_tag_list(base: PathBuf) -> Vec<String> {
 /// of the blog, only a preview.
 ///
 /// Control the legnth of the preview with `preview_length`. Default is 320 chars
-pub fn preview_blogs_tagged(
-    base: PathBuf,
+pub fn preview_blogs_tagged<T: AsRef<Path>>(
+    base: T,
     tag: String,
     preview_length: Option<usize>,
 ) -> Vec<PreviewBlogEntry> {
@@ -110,12 +110,13 @@ pub fn preview_blogs_tagged(
 /// Optionally, provide a table of contents generation function
 ///
 /// Returns `None` if the specified blog can not be found
-pub fn render_blog_post(
-    base: PathBuf,
+pub fn render_blog_post<T: AsRef<Path>>(
+    base: T,
     date: String,
     slug: String,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
 ) -> Option<LowBlogEntry> {
+    let base = base.as_ref();
     let split: Vec<&str> = date.split("-").collect();
     let year = split[0];
     let folder = base.join(format!("{}", year)).join(format!("{}", date));
@@ -172,8 +173,8 @@ pub fn render_blog_post(
 /// `num` controls how many blogs will be in the preview
 ///
 /// `preview_length` is how long each preview will be. Default is 320 chars
-pub fn preview_blogs(
-    base: PathBuf,
+pub fn preview_blogs<T: AsRef<Path>>(
+    base: T,
     num: usize,
     preview_length: Option<usize>,
 ) -> Vec<PreviewBlogEntry> {

@@ -3,18 +3,21 @@ mod types;
 use markdown::{mdast::Node, to_html, to_mdast, ParseOptions};
 pub use types::BlogJson;
 
-use std::{fs, io, path::PathBuf};
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+};
 
 use walkdir::WalkDir;
 
-pub fn get_blog_paths(base: PathBuf) -> Result<Vec<PathBuf>, io::Error> {
-    let base = PathBuf::from(base);
+pub fn get_blog_paths<T: AsRef<Path>>(base: T) -> Result<Vec<PathBuf>, io::Error> {
+    let base = base.as_ref();
     if !base.is_dir() {
         panic!("BLOG_ROOT is not a directory!")
     }
     let mut markdown_files: Vec<PathBuf> = Vec::new();
 
-    for entry in WalkDir::new(base.clone()) {
+    for entry in WalkDir::new(base) {
         let entry = entry?;
 
         let name = match entry.file_name().to_str() {
@@ -37,7 +40,8 @@ pub fn get_blog_paths(base: PathBuf) -> Result<Vec<PathBuf>, io::Error> {
     Ok(markdown_files)
 }
 
-pub fn get_json_data(blog: &PathBuf) -> Result<BlogJson, io::Error> {
+pub fn get_json_data<T: AsRef<Path>>(blog: T) -> Result<BlogJson, io::Error> {
+    let blog = blog.as_ref();
     let mut json_path = blog.parent().unwrap().to_path_buf();
     let name_split: Vec<&str> = blog
         .file_name()
