@@ -106,3 +106,8 @@ cargo run --example low
 ```
 
 You can then view them from localhost:8080
+
+## Todo
+
+- More enlightening error messages and generally better error handling
+- This crate is in desperate need of more testing and feedback!

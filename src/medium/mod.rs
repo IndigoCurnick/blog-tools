@@ -1,10 +1,13 @@
-use std::{collections::HashMap, fs, io, path::PathBuf};
+use std::{collections::HashMap, fs, path::PathBuf};
 
 use chrono::{Datelike, NaiveDate};
 use markdown::{mdast::Node, to_html_with_options, Options};
 use serde::{Deserialize, Serialize};
 
-use crate::{common::BlogJson, high::HighBlogEntry};
+use crate::{
+    common::{BlogError, BlogJson},
+    high::HighBlogEntry,
+};
 
 use self::parse::get_blog_entries;
 
@@ -22,7 +25,7 @@ mod parse;
 /// ```rust,ignore
 /// lazy_static! {
 ///     pub static ref STATIC_BLOG_ENTRIES: MediumBlog =
-///         get_medium_blog(PathBuf::from(BLOG_ROOT), None, None);
+///         get_medium_blog(PathBuf::from(BLOG_ROOT), None, None).unwrap();
 ///     }
 ///
 /// let this_blog = match all_blogs.hash.get(&complete_slug) {
@@ -42,7 +45,7 @@ pub fn get_medium_blog(
     base: PathBuf,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
     preview_chars: Option<usize>,
-) -> MediumBlog {
+) -> Result<MediumBlog, BlogError> {
     return get_blog_entries(base, toc_generation_func, preview_chars);
 }
 
@@ -126,15 +129,19 @@ impl MediumBlogEntry {
 
     /// Use this function to render a `MediumBlogEntry` into a `HighBlogEntry`,
     /// which then contains the full blog HTML you can return to a user
-    pub fn render(&self, base: PathBuf) -> Result<HighBlogEntry, io::Error> {
+    pub fn render(&self, base: PathBuf) -> Result<HighBlogEntry, BlogError> {
         let year = self.date.year();
         let path = base
             .join(format!("{}", year))
             .join(format!("{}", self.date))
             .join(self.file_name.clone());
 
-        let md = fs::read_to_string(path)?;
-        let html = to_html_with_options(
+        let md = match fs::read_to_string(path) {
+            Ok(x) => x,
+            Err(y) => return Err(BlogError::File(y)),
+        };
+
+        let html = match to_html_with_options(
             &md,
             &Options {
                 compile: markdown::CompileOptions {
@@ -145,8 +152,10 @@ impl MediumBlogEntry {
                 },
                 ..markdown::Options::default()
             },
-        )
-        .unwrap();
+        ) {
+            Ok(x) => x,
+            Err(y) => return Err(BlogError::Markdown(y)),
+        };
 
         let high = HighBlogEntry {
             title: self.title.clone(),

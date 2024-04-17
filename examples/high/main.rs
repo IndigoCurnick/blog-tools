@@ -94,7 +94,7 @@ pub static BLOG_ROOT: &str = "examples/blog";
 
 lazy_static! {
     pub static ref STATIC_BLOG_ENTRIES: HighBlog =
-        get_high_blog(PathBuf::from(BLOG_ROOT), None, None);
+        get_high_blog(PathBuf::from(BLOG_ROOT), None, None).unwrap();
 }
 
 fn get_blog_context() -> &'static HighBlog {

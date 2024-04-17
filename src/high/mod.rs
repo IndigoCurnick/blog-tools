@@ -3,7 +3,7 @@ use markdown::mdast::Node;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, path::Path};
 
-use crate::common::BlogJson;
+use crate::common::{BlogError, BlogJson};
 
 use self::parse::get_blog_entries;
 
@@ -22,7 +22,7 @@ mod parse;
 /// pub static BLOG_ROOT: &str = "examples/blog/post";
 
 /// lazy_static! {
-///     pub static ref STATIC_BLOG_ENTRIES: Blog = get_blog(PathBuf::from(BLOG_ROOT), None, None);
+///     pub static ref STATIC_BLOG_ENTRIES: Blog = get_blog(PathBuf::from(BLOG_ROOT), None, None).unwrap();
 /// }
 /// ```
 ///
@@ -30,7 +30,7 @@ pub fn get_high_blog<T: AsRef<Path>>(
     base: T,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
     preview_chars: Option<usize>,
-) -> HighBlog {
+) -> Result<HighBlog, BlogError> {
     return get_blog_entries(base, toc_generation_func, preview_chars);
 }
 

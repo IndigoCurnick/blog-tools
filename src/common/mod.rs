@@ -1,16 +1,16 @@
 mod types;
+pub use types::{BlogError, BlogJson};
 
 use markdown::{mdast::Node, to_html, to_mdast, ParseOptions};
-pub use types::BlogJson;
 
 use std::{
-    fs, io,
+    fs,
     path::{Path, PathBuf},
 };
 
 use walkdir::WalkDir;
 
-pub fn get_blog_paths<T: AsRef<Path>>(base: T) -> Result<Vec<PathBuf>, io::Error> {
+pub fn get_blog_paths<T: AsRef<Path>>(base: T) -> Result<Vec<PathBuf>, BlogError> {
     let base = base.as_ref();
     if !base.is_dir() {
         panic!("BLOG_ROOT is not a directory!")
@@ -18,7 +18,10 @@ pub fn get_blog_paths<T: AsRef<Path>>(base: T) -> Result<Vec<PathBuf>, io::Error
     let mut markdown_files: Vec<PathBuf> = Vec::new();
 
     for entry in WalkDir::new(base) {
-        let entry = entry?;
+        let entry = match entry {
+            Ok(x) => x,
+            Err(y) => return Err(BlogError::File(y.into())),
+        };
 
         let name = match entry.file_name().to_str() {
             Some(x) => x,
@@ -40,22 +43,37 @@ pub fn get_blog_paths<T: AsRef<Path>>(base: T) -> Result<Vec<PathBuf>, io::Error
     Ok(markdown_files)
 }
 
-pub fn get_json_data<T: AsRef<Path>>(blog: T) -> Result<BlogJson, io::Error> {
+pub fn get_json_data<T: AsRef<Path>>(blog: T) -> Result<BlogJson, BlogError> {
     let blog = blog.as_ref();
-    let mut json_path = blog.parent().unwrap().to_path_buf();
-    let name_split: Vec<&str> = blog
-        .file_name()
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .split(".")
-        .collect();
-    let name = format!("{}.json", name_split[0]);
 
-    json_path.push(name);
+    let parent_path = match blog.parent() {
+        Some(x) => x,
+        None => return Err(BlogError::FileNotFound),
+    };
+
+    let file_name = match blog.file_name() {
+        Some(x) => x,
+        None => todo!(),
+    };
+
+    let file_str = match file_name.to_str() {
+        Some(x) => x,
+        None => todo!(),
+    };
+
+    let name_split: Vec<&str> = file_str.split(".").collect();
+
+    let n = match name_split.get(0) {
+        Some(&x) => x,
+        None => todo!(),
+    };
+
+    let name = format!("{}.json", n);
+
+    let json_path = parent_path.join(name);
     let json_text = match fs::read_to_string(json_path) {
         Ok(x) => x,
-        Err(y) => return Err(y),
+        Err(y) => return Err(BlogError::File(y)),
     };
 
     let json_data: BlogJson = serde_json::from_str(&json_text).unwrap();
@@ -74,16 +92,15 @@ pub fn get_preview(markdown: &String, preview_chars: Option<usize>) -> String {
 pub fn toc(
     markdown: &String,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
-) -> Option<String> {
-    let toc = if toc_generation_func.is_some() {
-        let mdast = to_mdast(&markdown, &ParseOptions::default()).unwrap();
+) -> Result<Option<String>, BlogError> {
+    return if let Some(toc_gen) = toc_generation_func {
+        let mdast = match to_mdast(&markdown, &ParseOptions::default()) {
+            Ok(x) => x,
+            Err(y) => return Err(BlogError::Markdown(y)),
+        };
 
-        let toc_fn = toc_generation_func.unwrap();
-
-        Some(toc_fn(&mdast))
+        Ok(Some(toc_gen(&mdast)))
     } else {
-        None
+        Ok(None)
     };
-
-    return toc;
 }
