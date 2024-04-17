@@ -25,7 +25,7 @@ pub fn get_blog_entries<T: AsRef<Path>>(
         tags.extend(out.tags);
     }
 
-    entries.sort_by_key(|z| z.date);
+    entries.sort_by(|a, b| b.date.cmp(&a.date));
 
     return Ok(HighBlog {
         hash: hashes,

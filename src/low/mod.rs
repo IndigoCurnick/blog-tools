@@ -253,8 +253,6 @@ pub fn preview_blogs<T: AsRef<Path>>(
         }
     }
 
-    json_paths.sort();
-
     let mut blogs = vec![];
 
     for i in 0..num {
@@ -296,6 +294,8 @@ pub fn preview_blogs<T: AsRef<Path>>(
 
         blogs.push(blog_preview);
     }
+
+    blogs.sort_by(|a, b| b.date.cmp(&a.date));
 
     return Ok(blogs);
 }
