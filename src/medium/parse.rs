@@ -1,16 +1,16 @@
-use std::{collections::HashMap, fs, path::PathBuf};
+use std::{collections::HashMap, fs, path::Path};
 
 use markdown::mdast::Node;
 
-use crate::common::{get_blog_paths, get_json_data, get_preview, toc};
+use crate::common::{get_blog_paths, get_json_data, get_preview, toc, BlogError};
 
 use super::{MediumBlog, MediumBlogEntry};
 
-pub fn get_blog_entries(
-    base: PathBuf,
+pub fn get_blog_entries<T: AsRef<Path>>(
+    base: T,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
     preview_chars: Option<usize>,
-) -> MediumBlog {
+) -> Result<MediumBlog, BlogError> {
     let blog_paths = get_blog_paths(base).unwrap();
 
     let mut hashes: HashMap<String, MediumBlogEntry> = HashMap::new();
@@ -18,52 +18,67 @@ pub fn get_blog_entries(
     let mut tags: Vec<String> = vec![];
 
     for blog in blog_paths {
-        process_blogs(
-            &blog,
-            &mut hashes,
-            &mut entries,
-            &mut tags,
-            toc_generation_func,
-            preview_chars,
-        )
+        let out = process_blogs(&blog, &tags, toc_generation_func, preview_chars)?;
+
+        hashes.insert(out.blog_entry.slug.clone(), out.blog_entry.clone());
+        entries.push(out.blog_entry.clone());
+        tags.extend(out.tags);
     }
 
-    return MediumBlog {
+    entries.sort_by_key(|z| z.date);
+
+    return Ok(MediumBlog {
         hash: hashes,
-        entries: entries,
-        tags: tags,
-    };
+        entries,
+        tags,
+    });
 }
 
-fn process_blogs(
-    blog: &PathBuf,
-    hashes: &mut HashMap<String, MediumBlogEntry>,
-    entries: &mut Vec<MediumBlogEntry>,
-    tags: &mut Vec<String>,
+fn process_blogs<T: AsRef<Path>>(
+    blog: T,
+    tags: &Vec<String>,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
     preview_chars: Option<usize>,
-) {
-    let json_data = match get_json_data(blog) {
-        Ok(x) => x,
-        Err(_y) => return,
-    };
+) -> Result<SingleBlogProcess, BlogError> {
+    let blog = blog.as_ref();
+    let json_data = get_json_data(blog)?;
 
+    let mut out_tags = vec![];
     for tag in &json_data.tags {
         if !tags.contains(&tag) {
-            tags.push(tag.clone());
+            // I guess technically, we can get repeats if the user puts the same tag in the json list...
+            out_tags.push(tag.clone());
         }
     }
 
-    let markdown = fs::read_to_string(blog).unwrap();
+    let markdown = match fs::read_to_string(blog) {
+        Ok(x) => x,
+        Err(y) => return Err(BlogError::File(y)),
+    };
 
     let preview: String = get_preview(&markdown, preview_chars);
 
-    let toc = toc(&markdown, toc_generation_func);
+    let toc = toc(&markdown, toc_generation_func)?;
 
-    let file_name = blog.file_name().unwrap().to_str().unwrap().to_string();
+    let file_name = match blog.file_name() {
+        Some(x) => x,
+        None => return Err(BlogError::FileNotFound),
+    };
+
+    let file_name = match file_name.to_str() {
+        Some(x) => x.to_string(),
+        None => return Err(BlogError::FileNotFound),
+    };
 
     let blog_entry = MediumBlogEntry::new(json_data, toc, preview, file_name);
 
-    hashes.insert(blog_entry.slug.clone(), blog_entry.clone());
-    entries.push(blog_entry);
+    return Ok(SingleBlogProcess {
+        blog_entry,
+        tags: out_tags,
+    });
+}
+
+struct SingleBlogProcess {
+    pub blog_entry: MediumBlogEntry,
+    pub tags: Vec<String>,
 }

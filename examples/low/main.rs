@@ -48,8 +48,8 @@ fn blog_index() -> Option<Template> {
 
     let mut context = rocket_dyn_templates::tera::Context::new();
 
-    let preview = preview_blogs(PathBuf::from_str(BLOG_ROOT).unwrap(), 2, None);
-    let tags = get_blog_tag_list(PathBuf::from_str(BLOG_ROOT).unwrap());
+    let preview = preview_blogs(PathBuf::from_str(BLOG_ROOT).unwrap(), 2, None).unwrap();
+    let tags = get_blog_tag_list(PathBuf::from_str(BLOG_ROOT).unwrap()).unwrap();
     context.insert(
         "blog",
         &Blogs {
@@ -74,7 +74,8 @@ fn blog_article(date: String, slug: String) -> Option<Template> {
 fn tag_page(slug: String) -> Option<Template> {
     let mut context = rocket_dyn_templates::tera::Context::new();
     context.insert("tag", &slug);
-    let all_blogs = preview_blogs_tagged(PathBuf::from_str(BLOG_ROOT).unwrap(), slug, None);
+    let all_blogs =
+        preview_blogs_tagged(PathBuf::from_str(BLOG_ROOT).unwrap(), slug, None).unwrap();
 
     context.insert("blogs", &all_blogs);
 

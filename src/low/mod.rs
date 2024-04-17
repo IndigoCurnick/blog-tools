@@ -1,11 +1,11 @@
-use std::{fs, path::PathBuf};
+use std::{fs, path::Path};
 
 use chrono::NaiveDate;
 use markdown::{mdast::Node, to_html_with_options, Options};
 use serde::{Deserialize, Serialize};
 use walkdir::WalkDir;
 
-use crate::common::{get_json_data, get_preview, toc, BlogJson};
+use crate::common::{get_json_data, get_preview, toc, BlogError, BlogJson};
 
 /// Use this function to get a list of all unique tags in your blog
 ///
@@ -13,7 +13,7 @@ use crate::common::{get_json_data, get_preview, toc, BlogJson};
 /// maybe consider caching this? Even though this is the no-cache option, a list
 /// of single word strings isn't that large. If even this is too large to fit in
 /// memory, you probably need a database rather than this crate
-pub fn get_blog_tag_list(base: PathBuf) -> Vec<String> {
+pub fn get_blog_tag_list<T: AsRef<Path>>(base: T) -> Result<Vec<String>, BlogError> {
     let mut tags = vec![];
 
     for entry in WalkDir::new(base) {
@@ -30,8 +30,20 @@ pub fn get_blog_tag_list(base: PathBuf) -> Vec<String> {
             continue;
         }
 
-        let parent = path.parent().unwrap();
-        let file_name = path.file_name().unwrap().to_str().unwrap();
+        let parent = match path.parent() {
+            Some(x) => x,
+            None => return Err(BlogError::FileNotFound),
+        };
+
+        let file_name = match path.file_name() {
+            Some(x) => x,
+            None => return Err(BlogError::FileNotFound),
+        };
+
+        let file_name = match file_name.to_str() {
+            Some(x) => x,
+            None => return Err(BlogError::FileNotFound),
+        };
 
         let md_file_name = file_name.replace(".json", ".md");
 
@@ -41,9 +53,7 @@ pub fn get_blog_tag_list(base: PathBuf) -> Vec<String> {
             continue;
         }
 
-        let path = path.to_path_buf();
-
-        let json_text = get_json_data(&path).unwrap();
+        let json_text = get_json_data(path)?;
 
         for tag in &json_text.tags {
             if !tags.contains(tag) {
@@ -52,7 +62,7 @@ pub fn get_blog_tag_list(base: PathBuf) -> Vec<String> {
         }
     }
 
-    return tags;
+    return Ok(tags);
 }
 
 /// This function will find all of the blogs with the specified tag, so they
@@ -60,22 +70,27 @@ pub fn get_blog_tag_list(base: PathBuf) -> Vec<String> {
 /// of the blog, only a preview.
 ///
 /// Control the legnth of the preview with `preview_length`. Default is 320 chars
-pub fn preview_blogs_tagged(
-    base: PathBuf,
+pub fn preview_blogs_tagged<T: AsRef<Path>>(
+    base: T,
     tag: String,
     preview_length: Option<usize>,
-) -> Vec<PreviewBlogEntry> {
+) -> Result<Vec<PreviewBlogEntry>, BlogError> {
     let mut blogs = vec![];
 
     for entry in WalkDir::new(base) {
         let entry = entry.unwrap();
 
-        if !entry.file_name().to_str().unwrap().ends_with(".json") {
+        let f_n = match entry.file_name().to_str() {
+            Some(x) => x,
+            None => return Err(BlogError::FileNotFound),
+        };
+
+        if !f_n.ends_with(".json") {
             continue;
         }
 
-        let path = entry.into_path();
-        let json = get_json_data(&path).unwrap();
+        let path = entry.path();
+        let json = get_json_data(path)?;
 
         if !json.tags.contains(&tag) {
             continue;
@@ -83,14 +98,29 @@ pub fn preview_blogs_tagged(
 
         // Great! We've found the blog post!
 
-        let parent = path.parent().unwrap();
+        let parent = match path.parent() {
+            Some(x) => x,
+            None => return Err(BlogError::FileNotFound),
+        };
 
-        let file_name = path.file_name().unwrap().to_str().unwrap();
+        let file_name = match path.file_name() {
+            Some(x) => x,
+            None => return Err(BlogError::FileNotFound),
+        };
+
+        let file_name = match file_name.to_str() {
+            Some(x) => x,
+            None => return Err(BlogError::FileNotFound),
+        };
+
         let file_base = file_name.replace(".json", ".md");
 
         let md_path = parent.join(file_base);
 
-        let md = fs::read_to_string(md_path).unwrap();
+        let md = match fs::read_to_string(md_path) {
+            Ok(x) => x,
+            Err(y) => return Err(BlogError::File(y)),
+        };
 
         let preview = get_preview(&md, preview_length);
 
@@ -99,7 +129,7 @@ pub fn preview_blogs_tagged(
         blogs.push(blog);
     }
 
-    return blogs;
+    return Ok(blogs);
 }
 
 /// Renders an individual blog post.
@@ -110,25 +140,36 @@ pub fn preview_blogs_tagged(
 /// Optionally, provide a table of contents generation function
 ///
 /// Returns `None` if the specified blog can not be found
-pub fn render_blog_post(
-    base: PathBuf,
+pub fn render_blog_post<T: AsRef<Path>>(
+    base: T,
     date: String,
     slug: String,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
-) -> Option<LowBlogEntry> {
+) -> Result<Option<LowBlogEntry>, BlogError> {
+    let base = base.as_ref();
     let split: Vec<&str> = date.split("-").collect();
-    let year = split[0];
+
+    let year = match split.get(0) {
+        Some(&x) => x,
+        None => return Err(BlogError::ImproperDate(date.clone())),
+    };
+
     let folder = base.join(format!("{}", year)).join(format!("{}", date));
 
     for entry in WalkDir::new(folder) {
         let entry = entry.unwrap();
 
-        if !entry.file_name().to_str().unwrap().ends_with(".json") {
+        let f_n = match entry.file_name().to_str() {
+            Some(x) => x,
+            None => return Err(BlogError::FileNotFound),
+        };
+
+        if !f_n.ends_with(".json") {
             continue;
         }
 
-        let path = entry.into_path();
-        let json = get_json_data(&path).unwrap();
+        let path = entry.path();
+        let json = get_json_data(path)?;
 
         if json.slug != slug {
             continue;
@@ -136,16 +177,32 @@ pub fn render_blog_post(
 
         // Great! We've found the blog post!
 
-        let parent = path.parent().unwrap();
+        let parent = match path.parent() {
+            Some(x) => x,
+            None => return Err(BlogError::FileNotFound),
+        };
 
-        let file_name = path.file_name().unwrap().to_str().unwrap();
+        // TODO: I've done this little two stage file name thing several times - there must be scope for abstracting this into a function
+        let file_name = match path.file_name() {
+            Some(x) => x,
+            None => return Err(BlogError::FileNotFound),
+        };
+
+        let file_name = match file_name.to_str() {
+            Some(x) => x,
+            None => return Err(BlogError::FileNotFound),
+        };
+
         let file_base = file_name.replace(".json", ".md");
 
         let md_path = parent.join(file_base);
 
-        let md = fs::read_to_string(md_path).unwrap();
+        let md = match fs::read_to_string(md_path) {
+            Ok(x) => x,
+            Err(y) => return Err(BlogError::File(y)),
+        };
 
-        let html = to_html_with_options(
+        let html = match to_html_with_options(
             &md,
             &Options {
                 compile: markdown::CompileOptions {
@@ -156,15 +213,17 @@ pub fn render_blog_post(
                 },
                 ..markdown::Options::default()
             },
-        )
-        .unwrap();
+        ) {
+            Ok(x) => x,
+            Err(y) => return Err(BlogError::Markdown(y)),
+        };
 
-        let toc = toc(&md, toc_generation_func);
+        let toc = toc(&md, toc_generation_func)?;
 
-        return Some(LowBlogEntry::new(json, html, toc));
+        return Ok(Some(LowBlogEntry::new(json, html, toc)));
     }
 
-    return None;
+    return Ok(None);
 }
 
 /// Previews blogs for an index page. Will order from newest to oldest
@@ -172,11 +231,11 @@ pub fn render_blog_post(
 /// `num` controls how many blogs will be in the preview
 ///
 /// `preview_length` is how long each preview will be. Default is 320 chars
-pub fn preview_blogs(
-    base: PathBuf,
+pub fn preview_blogs<T: AsRef<Path>>(
+    base: T,
     num: usize,
     preview_length: Option<usize>,
-) -> Vec<PreviewBlogEntry> {
+) -> Result<Vec<PreviewBlogEntry>, BlogError> {
     let mut json_paths = vec![];
 
     for entry in WalkDir::new(base) {
@@ -199,19 +258,37 @@ pub fn preview_blogs(
     let mut blogs = vec![];
 
     for i in 0..num {
-        let json = get_json_data(&json_paths[i]).unwrap(); // TODO: there's an out of bounds error here
+        let this_path = match json_paths.get(i) {
+            Some(x) => x,
+            None => break,
+        };
 
-        let parent = json_paths[i].parent().unwrap();
-        let file_name = json_paths[i]
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .replace(".json", ".md");
+        let json = get_json_data(this_path)?;
+
+        let parent = match json_paths[i].parent() {
+            // We can use [i] here since we know this must exist :)
+            Some(x) => x,
+            None => return Err(BlogError::FileNotFound),
+        };
+
+        let file_name = match json_paths[i].file_name() {
+            Some(x) => x,
+            None => return Err(BlogError::FileNotFound),
+        };
+
+        let file_name = match file_name.to_str() {
+            Some(x) => x,
+            None => return Err(BlogError::FileNotFound),
+        };
+
+        let file_name = file_name.replace(".json", ".md");
 
         let md_path = parent.join(file_name);
 
-        let markdown = fs::read_to_string(md_path).unwrap();
+        let markdown = match fs::read_to_string(md_path) {
+            Ok(x) => x,
+            Err(y) => return Err(BlogError::File(y)),
+        };
 
         let preview: String = get_preview(&markdown, preview_length);
 
@@ -220,7 +297,7 @@ pub fn preview_blogs(
         blogs.push(blog_preview);
     }
 
-    return blogs;
+    return Ok(blogs);
 }
 
 /// An individual blog post

@@ -1,16 +1,16 @@
-use std::{collections::HashMap, fs, path::PathBuf};
+use std::{collections::HashMap, fs, path::Path};
 
 use markdown::{mdast::Node, to_html_with_options, Options};
 
-use crate::common::{get_blog_paths, get_json_data, get_preview, toc};
+use crate::common::{get_blog_paths, get_json_data, get_preview, toc, BlogError};
 
 use super::{HighBlog, HighBlogEntry};
 
-pub fn get_blog_entries(
-    base: PathBuf,
+pub fn get_blog_entries<T: AsRef<Path>>(
+    base: T,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
     preview_chars: Option<usize>,
-) -> HighBlog {
+) -> Result<HighBlog, BlogError> {
     let blog_paths = get_blog_paths(base).unwrap();
 
     let mut hashes: HashMap<String, HighBlogEntry> = HashMap::new();
@@ -18,46 +18,45 @@ pub fn get_blog_entries(
     let mut tags: Vec<String> = vec![];
 
     for blog in blog_paths {
-        process_blogs(
-            &blog,
-            &mut hashes,
-            &mut entries,
-            &mut tags,
-            toc_generation_func,
-            preview_chars,
-        )
+        let out = process_blogs(&blog, &tags, toc_generation_func, preview_chars)?;
+
+        hashes.insert(out.entry.slug.clone(), out.entry.clone());
+        entries.push(out.entry.clone());
+        tags.extend(out.tags);
     }
 
-    return HighBlog {
+    entries.sort_by_key(|z| z.date);
+
+    return Ok(HighBlog {
         hash: hashes,
         entries: entries,
         tags: tags,
-    };
+    });
 }
 
-fn process_blogs(
-    blog: &PathBuf,
-    hashes: &mut HashMap<String, HighBlogEntry>,
-    entries: &mut Vec<HighBlogEntry>,
-    tags: &mut Vec<String>,
+fn process_blogs<T: AsRef<Path>>(
+    blog: T,
+    tags: &Vec<String>,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
     preview_chars: Option<usize>,
-) {
-    let json_data = match get_json_data(blog) {
-        Ok(x) => x,
-        Err(_y) => return,
-    };
+) -> Result<OneBlog, BlogError> {
+    let blog = blog.as_ref();
+    let json_data = get_json_data(blog)?;
 
+    let mut out_tags = vec![];
     for tag in &json_data.tags {
         if !tags.contains(&tag) {
-            tags.push(tag.clone());
+            out_tags.push(tag.clone());
         }
     }
 
-    let markdown = fs::read_to_string(blog).unwrap();
+    let markdown = match fs::read_to_string(blog) {
+        Ok(x) => x,
+        Err(y) => return Err(BlogError::File(y)),
+    };
 
     let preview: String = get_preview(&markdown, preview_chars);
-    let html = to_html_with_options(
+    let html = match to_html_with_options(
         &markdown,
         &Options {
             compile: markdown::CompileOptions {
@@ -68,13 +67,22 @@ fn process_blogs(
             },
             ..markdown::Options::default()
         },
-    )
-    .unwrap();
+    ) {
+        Ok(x) => x,
+        Err(y) => return Err(BlogError::Markdown(y)),
+    };
 
-    let toc = toc(&markdown, toc_generation_func);
+    let toc = toc(&markdown, toc_generation_func)?;
 
     let blog_entry = HighBlogEntry::new(json_data, html, toc, preview);
 
-    hashes.insert(blog_entry.slug.clone(), blog_entry.clone());
-    entries.push(blog_entry);
+    return Ok(OneBlog {
+        entry: blog_entry,
+        tags: out_tags,
+    });
+}
+
+struct OneBlog {
+    pub entry: HighBlogEntry,
+    pub tags: Vec<String>,
 }
