@@ -1,7 +1,8 @@
+pub mod preview;
 mod types;
-pub use types::{BlogError, BlogJson};
 
-use markdown::{mdast::Node, to_html, to_mdast, ParseOptions};
+use markdown::{mdast::Node, to_mdast, ParseOptions};
+pub use types::{BlogError, BlogJson};
 
 use std::{
     fs,
@@ -78,15 +79,6 @@ pub fn get_json_data<T: AsRef<Path>>(blog: T) -> Result<BlogJson, BlogError> {
 
     let json_data: BlogJson = serde_json::from_str(&json_text).unwrap();
     return Ok(json_data);
-}
-
-pub fn get_preview(markdown: &String, preview_chars: Option<usize>) -> String {
-    let num_chars = match preview_chars {
-        Some(x) => x,
-        None => 320,
-    };
-    let preview_md: String = markdown.chars().take(num_chars).collect();
-    return to_html(&preview_md);
 }
 
 pub fn toc(

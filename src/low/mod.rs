@@ -5,7 +5,7 @@ use markdown::{mdast::Node, to_html_with_options, Options};
 use serde::{Deserialize, Serialize};
 use walkdir::WalkDir;
 
-use crate::common::{get_json_data, get_preview, toc, BlogError, BlogJson};
+use crate::common::{get_json_data, preview::get_preview, toc, BlogError, BlogJson};
 
 /// Use this function to get a list of all unique tags in your blog
 ///
@@ -122,7 +122,24 @@ pub fn preview_blogs_tagged<T: AsRef<Path>>(
             Err(y) => return Err(BlogError::File(y)),
         };
 
-        let preview = get_preview(&md, preview_length);
+        // TODO: tbh I'm not very happy with rendering the HTML every single time here
+        let html = match to_html_with_options(
+            &md,
+            &Options {
+                compile: markdown::CompileOptions {
+                    allow_dangerous_html: true,
+                    allow_dangerous_protocol: true,
+
+                    ..markdown::CompileOptions::default()
+                },
+                ..markdown::Options::default()
+            },
+        ) {
+            Ok(x) => x,
+            Err(y) => return Err(BlogError::Markdown(y)),
+        };
+
+        let preview = get_preview(&html, preview_length);
 
         let blog = PreviewBlogEntry::new(json, preview);
 
