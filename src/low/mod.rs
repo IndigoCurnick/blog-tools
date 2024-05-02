@@ -305,7 +305,23 @@ pub fn preview_blogs<T: AsRef<Path>>(
             Err(y) => return Err(BlogError::File(y)),
         };
 
-        let preview: String = get_preview(&markdown, preview_length);
+        let html = match to_html_with_options(
+            &markdown,
+            &Options {
+                compile: markdown::CompileOptions {
+                    allow_dangerous_html: true,
+                    allow_dangerous_protocol: true,
+
+                    ..markdown::CompileOptions::default()
+                },
+                ..markdown::Options::default()
+            },
+        ) {
+            Ok(x) => x,
+            Err(y) => return Err(BlogError::Markdown(y)),
+        };
+
+        let preview: String = get_preview(&html, preview_length);
 
         let blog_preview = PreviewBlogEntry::new(json, preview);
 

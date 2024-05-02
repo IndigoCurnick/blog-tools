@@ -13,7 +13,6 @@ pub fn get_preview(html: &String, preview_chars: Option<usize>) -> String {
     let mut preview = String::new();
 
     for node in dom.nodes() {
-        println!("Now deadling with {:?}", node);
         let tag = match node.as_tag() {
             Some(x) => x,
             None => continue,
