@@ -2,7 +2,7 @@ use std::{collections::HashMap, fs, path::Path};
 
 use markdown::{mdast::Node, to_html_with_options, Options};
 
-use crate::common::{get_blog_paths, get_json_data, get_preview, toc, BlogError};
+use crate::common::{get_blog_paths, get_json_data, preview::get_preview, toc, BlogError};
 
 use super::{HighBlog, HighBlogEntry};
 
@@ -55,7 +55,6 @@ fn process_blogs<T: AsRef<Path>>(
         Err(y) => return Err(BlogError::File(y)),
     };
 
-    let preview: String = get_preview(&markdown, preview_chars);
     let html = match to_html_with_options(
         &markdown,
         &Options {
@@ -71,6 +70,8 @@ fn process_blogs<T: AsRef<Path>>(
         Ok(x) => x,
         Err(y) => return Err(BlogError::Markdown(y)),
     };
+
+    let preview: String = get_preview(&html, preview_chars);
 
     let toc = toc(&markdown, toc_generation_func)?;
 
