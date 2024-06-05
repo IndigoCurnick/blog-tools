@@ -111,6 +111,8 @@
 
 mod common;
 
+pub mod sitemap;
+
 /// `high` refers to high RAM usage - using this module you will be effectively
 /// storing the entire blog in memory at all times using a lazy static. Highest
 /// runtime performance but higest RAM usage

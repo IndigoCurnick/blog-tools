@@ -16,6 +16,8 @@ pub struct BlogJson {
     pub canonical_link: Option<String>,
     pub author_name: Option<String>,
     pub author_webpage: Option<String>,
+    pub last_modified: Option<NaiveDate>, // For sitemap, if not present uses `date`
+    pub priority: Option<f64>, // For sitemap, if not present uses the default 
 }
 
 #[derive(Debug)]
