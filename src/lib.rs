@@ -111,6 +111,10 @@
 
 mod common;
 
+mod types;
+
+pub use types::Blog;
+
 pub mod sitemap;
 
 /// `high` refers to high RAM usage - using this module you will be effectively

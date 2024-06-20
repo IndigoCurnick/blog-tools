@@ -1,9 +1,7 @@
 use std::path::PathBuf;
 
-use blog_tools::{
-    high::{get_high_blog, HighBlog, HighBlogEntry},
-    sitemap::generate_sitemap,
-};
+use blog_tools::high::{get_high_blog, HighBlog, HighBlogEntry};
+use blog_tools::Blog;
 use lazy_static::lazy_static;
 use rocket::{
     fs::{relative, FileServer},
@@ -72,7 +70,7 @@ fn tag_page(slug: String) -> Option<Template> {
     let mut these_blogs: Vec<&HighBlogEntry> = vec![];
 
     for blog in &all_blogs.entries {
-        if blog.tags.contains(&slug) {
+        if blog.get_tags().contains(&slug) {
             these_blogs.push(&blog);
         }
     }

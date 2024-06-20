@@ -1,10 +1,50 @@
-use std::{collections::HashMap, fs, path::Path};
+use std::{
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+};
 
 use markdown::{mdast::Node, to_html_with_options, Options};
 
 use crate::common::{get_blog_paths, get_json_data, preview::get_preview, toc, BlogError};
 
-use super::{MediumBlog, MediumBlogEntry};
+use super::types::{MediumBlog, MediumBlogEntry};
+
+/// Gets the whole `MediumBlog` from the specified path. Useful to combine with lazy
+/// static for loading times
+///
+/// The path should be a folder which contains markdown files next to json files
+///
+/// Add an optional toc generation function if you want a table of contents
+///
+/// Optionally specify the number of chars for the preview. Default is 320.
+///
+/// ```rust,ignore
+/// lazy_static! {
+///     pub static ref STATIC_BLOG_ENTRIES: MediumBlog =
+///         get_medium_blog(PathBuf::from(BLOG_ROOT), None, None).unwrap();
+///     }
+///
+/// let this_blog = match all_blogs.hash.get(&complete_slug) {
+///     Some(x) => x,
+///     None => return None,
+/// };
+///
+/// context.insert(
+///     "blog",
+///     &this_blog
+///         .render(PathBuf::from_str(BLOG_ROOT).unwrap())
+///         .unwrap(),
+/// );
+/// ```
+///
+pub fn get_medium_blog(
+    base: PathBuf,
+    toc_generation_func: Option<&dyn Fn(&Node) -> String>,
+    preview_chars: Option<usize>,
+) -> Result<MediumBlog, BlogError> {
+    return get_blog_entries(base, toc_generation_func, preview_chars);
+}
 
 pub fn get_blog_entries<T: AsRef<Path>>(
     base: T,
