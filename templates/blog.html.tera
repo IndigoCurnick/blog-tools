@@ -27,6 +27,8 @@
     {% if blog.desc %}
     <meta name="description" content="{{ blog.desc }}">
     {% endif %}
+
+    <link rel="icon" href="/favicon.ico">
 </head>
 
 <body>

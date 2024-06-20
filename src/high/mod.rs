@@ -30,8 +30,9 @@ pub fn get_high_blog<T: AsRef<Path>>(
     base: T,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
     preview_chars: Option<usize>,
+    url: &String,
 ) -> Result<HighBlog, BlogError> {
-    return get_blog_entries(base, toc_generation_func, preview_chars);
+    return get_blog_entries(base, toc_generation_func, preview_chars, url);
 }
 
 /// The main `HighBlog` which stores all relevant information for the blog
@@ -59,8 +60,11 @@ pub struct HighBlog {
     ///
     /// Useful when you want to list all tags e.g. on an index page
     pub tags: Vec<String>,
+    /// XML Representation of the sitemap
+    pub sitemap: String,
 }
 
+// TODO: Need a better way to manage the slugs - maybe a getter function and then keep the date and slug private?
 /// An individual blog post
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct HighBlogEntry {
@@ -88,6 +92,11 @@ pub struct HighBlogEntry {
     pub author_webpage: Option<String>,
     /// Preview of the blogpost, useful for showing on index pages
     pub preview: String,
+    /// Optional date of last modification - used for sitemap generation.
+    /// Default to date when not present
+    pub last_modified: Option<NaiveDate>,
+    /// Optionally used for sitemap - default to 0.5 if not present
+    pub priority: Option<f64>,
 }
 
 impl HighBlogEntry {
@@ -105,6 +114,8 @@ impl HighBlogEntry {
             author_name: json.author_name,
             author_webpage: json.author_webpage,
             preview: preview,
+            last_modified: json.last_modified,
+            priority: json.priority,
         };
     }
 }

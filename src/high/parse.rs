@@ -2,7 +2,10 @@ use std::{collections::HashMap, fs, path::Path};
 
 use markdown::{mdast::Node, to_html_with_options, Options};
 
-use crate::common::{get_blog_paths, get_json_data, preview::get_preview, toc, BlogError};
+use crate::{
+    common::{get_blog_paths, get_json_data, preview::get_preview, toc, BlogError},
+    sitemap::create_sitemap_inner,
+};
 
 use super::{HighBlog, HighBlogEntry};
 
@@ -10,6 +13,7 @@ pub fn get_blog_entries<T: AsRef<Path>>(
     base: T,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
     preview_chars: Option<usize>,
+    url: &String,
 ) -> Result<HighBlog, BlogError> {
     let blog_paths = get_blog_paths(base).unwrap();
 
@@ -27,10 +31,13 @@ pub fn get_blog_entries<T: AsRef<Path>>(
 
     entries.sort_by(|a, b| b.date.cmp(&a.date));
 
+    let sitemap = create_sitemap_inner(&entries, Some(&tags), url, None);
+
     return Ok(HighBlog {
         hash: hashes,
         entries: entries,
         tags: tags,
+        sitemap: sitemap,
     });
 }
 

@@ -102,6 +102,8 @@ pub struct MediumBlogEntry {
     /// Preview of the blogpost, useful for showing on index pages
     pub preview: String,
     file_name: String,
+    pub last_modified: Option<NaiveDate>,
+    pub priority: Option<f64>,
 }
 
 impl MediumBlogEntry {
@@ -124,6 +126,8 @@ impl MediumBlogEntry {
             author_webpage: json.author_webpage,
             preview: preview,
             file_name,
+            last_modified: json.last_modified,
+            priority: json.priority,
         };
     }
 
@@ -170,6 +174,8 @@ impl MediumBlogEntry {
             author_name: self.author_name.clone(),
             author_webpage: self.author_webpage.clone(),
             preview: self.preview.clone(),
+            last_modified: self.last_modified.clone(),
+            priority: self.priority.clone(),
         };
 
         return Ok(high);

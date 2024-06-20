@@ -8,7 +8,7 @@ extern crate blog_tools;
 fn test_sitemap() {
     let path = PathBuf::from_str("examples/blog").unwrap();
     let base = "www.example.com".to_string();
-    let sitemap = generate_sitemap(path, &base, None);
+    let sitemap = generate_sitemap(path, &base, None, false);
 
     println!("{}", sitemap);
 }
