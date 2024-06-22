@@ -1,6 +1,8 @@
+use std::fs;
 use std::path::PathBuf;
 
 use blog_tools::high::{get_high_blog, HighBlog, HighBlogEntry};
+use blog_tools::sitemap::SitemapOptions;
 use blog_tools::Blog;
 use lazy_static::lazy_static;
 use rocket::{
@@ -102,8 +104,18 @@ pub static BLOG_ROOT: &str = "examples/blog";
 pub static URL: &str = "www.example.xyz";
 
 lazy_static! {
-    pub static ref STATIC_BLOG_ENTRIES: HighBlog =
-        get_high_blog(PathBuf::from(BLOG_ROOT), None, None, &URL.to_string()).unwrap();
+    pub static ref STATIC_BLOG_ENTRIES: HighBlog = get_high_blog(
+        PathBuf::from(BLOG_ROOT),
+        None,
+        None,
+        &URL.to_string(),
+        &SitemapOptions {
+            include_tags: true,
+            sitemap_base: Some(fs::read_to_string("examples/xml/sitemap.xml").unwrap()),
+            ..Default::default()
+        }
+    )
+    .unwrap();
 }
 
 fn get_blog_context() -> &'static HighBlog {

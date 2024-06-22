@@ -1,9 +1,14 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fs, path::Path};
 
 use chrono::NaiveDate;
+use markdown::{mdast::Node, to_html_with_options, Options};
 use serde::{Deserialize, Serialize};
 
-use crate::{common::BlogJson, medium::MediumBlogEntry, types::Blog};
+use crate::{
+    common::{get_json_data, preview::get_preview, toc, BlogError, BlogJson},
+    medium::MediumBlogEntry,
+    types::Blog,
+};
 
 /// The main `HighBlog` which stores all relevant information for the blog
 ///
@@ -70,64 +75,114 @@ pub struct HighBlogEntry {
 }
 
 impl Blog for HighBlogEntry {
+    fn create<T: AsRef<Path>>(
+        blog: T,
+        toc_generation_func: Option<&dyn Fn(&Node) -> String>,
+        preview_chars: Option<usize>,
+    ) -> Result<Self, BlogError> {
+        let json = get_json_data(&blog)?;
+
+        let markdown = match fs::read_to_string(blog) {
+            Ok(x) => x,
+            Err(y) => return Err(BlogError::File(y)),
+        };
+
+        let html = match to_html_with_options(
+            &markdown,
+            &Options {
+                compile: markdown::CompileOptions {
+                    allow_dangerous_html: true,
+                    allow_dangerous_protocol: true,
+
+                    ..markdown::CompileOptions::default()
+                },
+                ..markdown::Options::default()
+            },
+        ) {
+            Ok(x) => x,
+            Err(y) => return Err(BlogError::Markdown(y)),
+        };
+
+        let preview: String = get_preview(&html, preview_chars);
+
+        let toc = toc(&markdown, toc_generation_func)?;
+
+        return Ok(HighBlogEntry {
+            title: json.title,
+            date: json.date,
+            desc: json.desc,
+            html: html,
+            slug: json.slug,
+            tags: json.tags,
+            toc: toc,
+            keywords: json.keywords,
+            canonical_link: json.canonical_link,
+            author_name: json.author_name,
+            author_webpage: json.author_webpage,
+            preview,
+            last_modified: json.last_modified,
+            priority: json.priority,
+        });
+    }
+
     fn get_title(&self) -> String {
-        todo!()
+        return self.title.clone();
     }
 
     fn get_date_listed(&self) -> NaiveDate {
-        todo!()
+        return self.date.clone();
     }
 
     fn get_description(&self) -> Option<String> {
-        todo!()
+        return self.desc.clone();
     }
 
     fn get_html(&self) -> String {
-        todo!()
+        return self.html.clone();
     }
 
     fn get_full_slug(&self) -> String {
-        todo!()
+        return format!("{}/{}", self.get_date_listed(), self.get_part_slug());
     }
 
     fn get_part_slug(&self) -> String {
-        todo!()
+        return self.slug.clone();
     }
 
     fn get_tags(&self) -> Vec<String> {
-        todo!()
+        return self.tags.clone();
     }
 
     fn get_table_of_contents(&self) -> Option<String> {
-        todo!()
+        return self.toc.clone();
     }
 
     fn get_keywords(&self) -> Option<Vec<String>> {
-        todo!()
+        return self.keywords.clone();
     }
 
     fn get_canonicle_link(&self) -> Option<String> {
-        todo!()
+        return self.canonical_link.clone();
     }
 
     fn get_author_name(&self) -> Option<String> {
-        todo!()
+        return self.author_name.clone();
     }
 
     fn get_author_webpage(&self) -> Option<String> {
-        todo!()
+        return self.author_webpage.clone();
     }
 
     fn get_preview(&self) -> String {
-        todo!()
+        return self.preview.clone();
     }
 
     fn get_last_modified(&self) -> Option<NaiveDate> {
-        todo!()
+        return self.last_modified.clone();
     }
 
     fn get_priority(&self) -> Option<f64> {
-        todo!()
+        return self.priority.clone();
     }
 }
 

@@ -35,6 +35,8 @@ pub struct MediumBlog {
     ///
     /// Useful when you want to list all tags e.g. on an index page
     pub tags: Vec<String>,
+    /// `String` representation of the sitemap
+    pub sitemap: String,
 }
 
 /// An individual blog post. You will need to render this using `render`
@@ -68,6 +70,14 @@ pub struct MediumBlogEntry {
 }
 
 impl Blog for MediumBlogEntry {
+    fn create<T: AsRef<std::path::Path>>(
+        blog: T,
+        toc_generation_func: Option<&dyn Fn(&markdown::mdast::Node) -> String>,
+        preview_chars: Option<usize>,
+    ) -> Result<Self, BlogError> {
+        todo!();
+    }
+
     fn get_title(&self) -> String {
         todo!()
     }

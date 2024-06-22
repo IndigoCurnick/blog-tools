@@ -1,6 +1,17 @@
-use chrono::NaiveDate;
+use std::path::Path;
 
-pub trait Blog {
+use chrono::NaiveDate;
+use markdown::mdast::Node;
+
+use crate::common::BlogError;
+
+// TODO: give these lifetimes so we don't need to clone
+pub trait Blog: Clone {
+    fn create<T: AsRef<Path>>(
+        blog: T,
+        toc_generation_func: Option<&dyn Fn(&Node) -> String>,
+        preview_chars: Option<usize>,
+    ) -> Result<Self, BlogError>;
     fn get_title(&self) -> String;
     fn get_date_listed(&self) -> NaiveDate;
     fn get_description(&self) -> Option<String>;

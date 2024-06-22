@@ -31,6 +31,13 @@ pub struct LowBlogEntry {
 }
 
 impl Blog for LowBlogEntry {
+    fn create<T: AsRef<std::path::Path>>(
+        blog: T,
+        toc_generation_func: Option<&dyn Fn(&markdown::mdast::Node) -> String>,
+        preview_chars: Option<usize>,
+    ) -> Result<Self, crate::common::BlogError> {
+        todo!();
+    }
     fn get_title(&self) -> String {
         todo!()
     }

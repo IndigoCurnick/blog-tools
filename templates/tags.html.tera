@@ -23,7 +23,7 @@
             {% for entry in blogs %}
 
             <div class="blog-card">
-                <a href="/blog/{{ entry.slug }}" class="no-underline black-links">
+                <a href="/blog/{{ entry.date }}/{{ entry.slug }}" class="no-underline black-links">
                     <div class="card-body">
                         <h4>
                             <span>{{ entry.title }}</span>

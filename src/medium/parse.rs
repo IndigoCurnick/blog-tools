@@ -6,7 +6,11 @@ use std::{
 
 use markdown::{mdast::Node, to_html_with_options, Options};
 
-use crate::common::{get_blog_paths, get_json_data, preview::get_preview, toc, BlogError};
+use crate::{
+    common::{get_json_data, parse_blogs, preview::get_preview, toc, BlogError},
+    sitemap::{create_sitemap_inner, SitemapOptions},
+    Blog,
+};
 
 use super::types::{MediumBlog, MediumBlogEntry};
 
@@ -42,35 +46,43 @@ pub fn get_medium_blog(
     base: PathBuf,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
     preview_chars: Option<usize>,
+    url: &String,
+    sitemap_options: &SitemapOptions,
 ) -> Result<MediumBlog, BlogError> {
-    return get_blog_entries(base, toc_generation_func, preview_chars);
+    return get_blog_entries(
+        base,
+        toc_generation_func,
+        preview_chars,
+        url,
+        sitemap_options,
+    );
 }
 
 pub fn get_blog_entries<T: AsRef<Path>>(
     base: T,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,
     preview_chars: Option<usize>,
+    url: &String,
+    sitemap_options: &SitemapOptions,
 ) -> Result<MediumBlog, BlogError> {
-    let blog_paths = get_blog_paths(base).unwrap();
-
     let mut hashes: HashMap<String, MediumBlogEntry> = HashMap::new();
-    let mut entries: Vec<MediumBlogEntry> = vec![];
-    let mut tags: Vec<String> = vec![];
 
-    for blog in blog_paths {
-        let out = process_blogs(&blog, &tags, toc_generation_func, preview_chars)?;
+    let (mut entries, tags): (Vec<MediumBlogEntry>, Vec<String>) =
+        parse_blogs(base, toc_generation_func, preview_chars)?;
 
-        hashes.insert(out.blog_entry.slug.clone(), out.blog_entry.clone());
-        entries.push(out.blog_entry.clone());
-        tags.extend(out.tags);
+    for entry in &entries {
+        hashes.insert(entry.get_full_slug(), entry.clone());
     }
 
-    entries.sort_by(|a, b| b.date.cmp(&a.date));
+    entries.sort_by(|a, b| b.get_date_listed().cmp(&a.get_date_listed()));
+
+    let sitemap = create_sitemap_inner(&entries, Some(&tags), url, sitemap_options)?;
 
     return Ok(MediumBlog {
         hash: hashes,
-        entries,
-        tags,
+        entries: entries,
+        tags: tags,
+        sitemap: sitemap,
     });
 }
 

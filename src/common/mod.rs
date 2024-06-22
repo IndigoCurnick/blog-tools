@@ -11,6 +11,33 @@ use std::{
 
 use walkdir::WalkDir;
 
+use crate::Blog;
+
+// TODO: Better name?
+pub fn parse_blogs<T: AsRef<Path>, U: Blog>(
+    base: T,
+    toc_generation_func: Option<&dyn Fn(&Node) -> String>,
+    preview_chars: Option<usize>,
+) -> Result<(Vec<U>, Vec<String>), BlogError> {
+    let blog_paths = get_blog_paths(base)?;
+
+    let mut entries = vec![];
+    let mut tags = vec![]; // TODO: would it be worth converting tags into a Set<String>?
+
+    for blog_path in blog_paths {
+        let out: U = process_blogs(blog_path, toc_generation_func, preview_chars)?;
+        entries.push(out.clone());
+
+        for tag in &out.get_tags() {
+            if !tags.contains(tag) {
+                tags.push(tag.clone());
+            }
+        }
+    }
+
+    return Ok((entries, tags));
+}
+
 pub fn get_blog_paths<T: AsRef<Path>>(base: T) -> Result<Vec<PathBuf>, BlogError> {
     let base = base.as_ref();
     if !base.is_dir() {
@@ -95,4 +122,12 @@ pub fn toc(
     } else {
         Ok(None)
     };
+}
+
+fn process_blogs<T: AsRef<Path>, U: Blog>(
+    blog: T,
+    toc_generation_func: Option<&dyn Fn(&Node) -> String>,
+    preview_chars: Option<usize>,
+) -> Result<U, BlogError> {
+    return U::create(blog, toc_generation_func, preview_chars);
 }
