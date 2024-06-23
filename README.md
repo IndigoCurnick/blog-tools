@@ -17,7 +17,7 @@ next to a `blog.json`.
 
 The JSON must conform to the following schema
 
-```json,ignore
+```
 {
 "title": String,
 "date": ISO 8601 Date i.e. YYYY-MM-DD,
