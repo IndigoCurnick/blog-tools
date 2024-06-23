@@ -7,6 +7,7 @@
     <link rel="stylesheet" type="text/css" href="/css/style.css">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="/favicon.ico">
 </head>
 
 <body>
@@ -22,7 +23,7 @@
             {% for entry in blogs %}
 
             <div class="blog-card">
-                <a href="/blog/{{ entry.slug }}" class="no-underline black-links">
+                <a href="/blog/{{ entry.date }}/{{ entry.slug }}" class="no-underline black-links">
                     <div class="card-body">
                         <h4>
                             <span>{{ entry.title }}</span>

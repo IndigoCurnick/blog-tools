@@ -1,10 +1,14 @@
-use std::{path::PathBuf, str::FromStr};
+use std::{fs, path::PathBuf, str::FromStr};
 
-use blog_tools::medium::{get_medium_blog, MediumBlog, MediumBlogEntry};
+use blog_tools::{
+    medium::{get_medium_blog, MediumBlog, MediumBlogEntry},
+    sitemap::SitemapOptions,
+    Blog,
+};
 use lazy_static::lazy_static;
 use rocket::{
     fs::{relative, FileServer},
-    response::Redirect,
+    response::{content::RawXml, Redirect},
     Request, Route,
 };
 use rocket_dyn_templates::Template;
@@ -32,6 +36,13 @@ async fn main() {
     {
         println!("Did not run. Error: {:?}", e)
     }
+}
+
+#[get("/sitemap.xml")]
+fn sitemap() -> RawXml<String> {
+    let blog = get_blog_context();
+
+    return RawXml(blog.sitemap.clone());
 }
 
 #[get("/blog")]
@@ -68,7 +79,7 @@ fn tag_page(slug: String) -> Option<Template> {
     let mut these_blogs: Vec<&MediumBlogEntry> = vec![];
 
     for blog in &all_blogs.entries {
-        if blog.tags.contains(&slug) {
+        if blog.get_tags().contains(&slug) {
             these_blogs.push(&blog);
         }
     }
@@ -93,14 +104,25 @@ async fn error(req: &Request<'_>) -> Redirect {
 }
 
 fn get_all_routes() -> Vec<Route> {
-    return routes![blog_index, blog_article, tag_page];
+    return routes![blog_index, blog_article, tag_page, sitemap];
 }
 
 pub static BLOG_ROOT: &str = "examples/blog";
+pub static URL: &str = "www.example.xyz";
 
 lazy_static! {
-    pub static ref STATIC_BLOG_ENTRIES: MediumBlog =
-        get_medium_blog(PathBuf::from(BLOG_ROOT), None, None).unwrap();
+    pub static ref STATIC_BLOG_ENTRIES: MediumBlog = get_medium_blog(
+        PathBuf::from(BLOG_ROOT),
+        None,
+        None,
+        &URL.to_string(),
+        &SitemapOptions {
+            include_tags: true,
+            sitemap_base: Some(fs::read_to_string("examples/xml/sitemap.xml").unwrap()),
+            ..Default::default()
+        }
+    )
+    .unwrap();
 }
 
 fn get_blog_context() -> &'static MediumBlog {

@@ -1,10 +1,13 @@
+use std::fs;
 use std::path::PathBuf;
 
 use blog_tools::high::{get_high_blog, HighBlog, HighBlogEntry};
+use blog_tools::sitemap::SitemapOptions;
+use blog_tools::Blog;
 use lazy_static::lazy_static;
 use rocket::{
     fs::{relative, FileServer},
-    response::Redirect,
+    response::{content::RawXml, Redirect},
     Request, Route,
 };
 use rocket_dyn_templates::Template;
@@ -41,6 +44,13 @@ fn blog_index() -> Option<Template> {
     Some(Template::render("blog_index", context.into_json()))
 }
 
+#[get("/sitemap.xml")]
+fn sitemap() -> RawXml<String> {
+    let blog = get_blog_context();
+
+    return RawXml(blog.sitemap.clone());
+}
+
 #[get("/blog/<date>/<slug>", rank = 2)]
 fn blog_article(date: String, slug: String) -> Option<Template> {
     let mut context = rocket_dyn_templates::tera::Context::new();
@@ -62,7 +72,7 @@ fn tag_page(slug: String) -> Option<Template> {
     let mut these_blogs: Vec<&HighBlogEntry> = vec![];
 
     for blog in &all_blogs.entries {
-        if blog.tags.contains(&slug) {
+        if blog.get_tags().contains(&slug) {
             these_blogs.push(&blog);
         }
     }
@@ -87,14 +97,25 @@ async fn error(req: &Request<'_>) -> Redirect {
 }
 
 fn get_all_routes() -> Vec<Route> {
-    return routes![blog_index, blog_article, tag_page];
+    return routes![blog_index, blog_article, tag_page, sitemap];
 }
 
 pub static BLOG_ROOT: &str = "examples/blog";
+pub static URL: &str = "www.example.xyz";
 
 lazy_static! {
-    pub static ref STATIC_BLOG_ENTRIES: HighBlog =
-        get_high_blog(PathBuf::from(BLOG_ROOT), None, None).unwrap();
+    pub static ref STATIC_BLOG_ENTRIES: HighBlog = get_high_blog(
+        PathBuf::from(BLOG_ROOT),
+        None,
+        None,
+        &URL.to_string(),
+        &SitemapOptions {
+            include_tags: true,
+            sitemap_base: Some(fs::read_to_string("examples/xml/sitemap.xml").unwrap()),
+            ..Default::default()
+        }
+    )
+    .unwrap();
 }
 
 fn get_blog_context() -> &'static HighBlog {
