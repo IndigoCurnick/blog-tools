@@ -3,51 +3,22 @@ use std::{io::Cursor, path::Path};
 use xml::{reader::XmlEvent as ReaderXmlEvent, writer::XmlEvent, EmitterConfig, EventReader};
 
 use crate::{
-    common::{get_blog_paths, get_json_data, parse_blogs, BlogError},
-    high::HighBlogEntry,
+    common::{parse_blogs, BlogError},
     low::LowBlogEntry,
     types::Blog,
 };
 
+use super::types::SitemapOptions;
+
 const DATE_FORMAT: &'static str = "%d-%m-%Y";
 
-// TODO: Need to be able to pass in an already existing sitemap to append together
-
-pub struct SitemapOptions {
-    pub default_priority: f64, // default 0.5
-    pub include_tags: bool,    // default false
-    /// This represents the location of the blog in the URL. The default is
-    /// `blog`. This would mean the individual blog posts are found at
-    /// `www.example.com/blog/2024-05-12/my-blog`. If you set this parameter to
-    /// `blog-home` then the sitemap would generate
-    /// www.example.com/blog-home/2024-05/12/my-blog`
-    pub blog_root_slug: String,
-    /// This represents the location of the tag index in the URL. The default is
-    /// `blog/tag`, if you set `include_tags` to `true`. If `include_tags` is
-    /// `false` (default behaviour), then this is ignored.
-    /// For example, if you had a tag called `science` then the
-    /// URL would be `www.example.com/blog/tag/science`.
-    pub tag_root_slug: String,
-    /// Optional `String` representation of an XML sitemap. This function will
-    /// automatically merge the records of this sitemap into the sitemap it
-    /// generates. Useful if you have a bunch of pages which are not part of the
-    /// blog that you'd like in the sitemap
-    pub sitemap_base: Option<String>,
-}
-
-impl Default for SitemapOptions {
-    fn default() -> Self {
-        Self {
-            default_priority: 0.5, // TODO: Maybe move this value into a constant?
-            include_tags: false,
-            blog_root_slug: "blog".to_string(), // TODO: Maybe move this value into a constant?
-            tag_root_slug: "blog/tag".to_string(),
-            sitemap_base: None,
-        }
-    }
-}
-
-// ?: I guess this will be used in the Low module? So, I'll use a LowBlogEntry concrete type for now
+/// Use this function in `low` mode to generate a sitemap
+///
+/// Parameters
+///
+/// - `blog_root`: Path to the root of the blog e.g. `files/blog`
+/// - `url_base`: URL of the website e.g. `www.example.com`
+/// - `options`: `SitemapOptions` for configuration
 pub fn create_sitemap<T: AsRef<Path>>(
     blog_root: T,
     url_base: &String,

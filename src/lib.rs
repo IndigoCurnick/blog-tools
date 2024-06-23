@@ -27,7 +27,9 @@
 //! "keywords": Optional<[String]>,
 //! "canonical_link": Optional<String>,
 //! "author_name": Optional<String>,
-//! "author_webpage": Optional<String>
+//! "author_webpage": Optional<String>,
+//! "last_modified": Optional<Date>, (ISO 8601)
+//! "priority": Optional<float>
 //! }
 //! ```
 //!
@@ -36,7 +38,6 @@
 //! In `blog-tools` all slugs are /{date}/{sub-slug}.
 //!
 //! Make sure the "slug" filed in the JSON is *just* the final sub-slug
-//! - `blog-tools` will automatically handle the date for you
 //!
 //! ## How This Crate is Organised
 //!
@@ -55,9 +56,9 @@
 //!
 //! ```rust,ignore
 //! lazy_static! {
-//!     pub static ref STATIC_BLOG_ENTRIES: HighBlog =
-//!         get_high_blog(PathBuf::from(BLOG_ROOT), None, None);
-//!     }
+//!    pub static ref STATIC_BLOG_ENTRIES: HighBlog =
+//!        get_high_blog(PathBuf::from(BLOG_ROOT), None, None, URL, &SitemapOptions::default());
+//!    }
 //! ```
 //!
 //! `medium` stores the majority of the blog, but not the rendered HTML of the
@@ -65,8 +66,8 @@
 //!
 //! ```rust,ignore
 //! lazy_static! {
-//!     pub static ref STATIC_BLOG_ENTRIES: MediumBlog =
-//!         get_medium_blog(PathBuf::from(BLOG_ROOT), None, None);
+//!    pub static ref STATIC_BLOG_ENTRIES: MediumBlog =
+//!        get_medium_blog(PathBuf::from(BLOG_ROOT), None, None, URL, &SitemapOptions::default());
 //!     }
 //!
 //! let this_blog = match all_blogs.hash.get(&complete_slug) {
@@ -88,6 +89,7 @@
 //! let preview = preview_blogs(PathBuf::from_str(BLOG_ROOT).unwrap(), 2, None);
 //! let tags = get_blog_tag_list(PathBuf::from_str(BLOG_ROOT).unwrap());
 //! let blog_post = render_blog_post(PathBuf::from_str(BLOG_ROOT).unwrap(), date, slug, None).unwrap();
+//! let sitemap = create_sitemap(BLOG_ROOT, URL, &SitemapOptions::default());
 //! ```
 //!
 //! This method can have serious runtime performance implecations, but might be
@@ -115,6 +117,12 @@ mod types;
 
 pub use types::Blog;
 
+/// Sitemap related utilities can be found here. If you use `high` or `medium`
+/// then the only thing you need from here is `SitemapOptions` to configure
+/// how a sitemap is generated.
+///
+/// If you use `low` then the function `create_sitemap` can be used to
+/// generate the sitemap
 pub mod sitemap;
 
 /// `high` refers to high RAM usage - using this module you will be effectively
@@ -124,8 +132,8 @@ pub mod sitemap;
 /// ```rust,ignore
 /// lazy_static! {
 ///     pub static ref STATIC_BLOG_ENTRIES: HighBlog =
-///         get_high_blog(PathBuf::from(BLOG_ROOT), None, None);
-///     }
+///         get_high_blog(PathBuf::from(BLOG_ROOT), None, None, URL, &SitemapOptions::default());
+/// }
 /// ```
 pub mod high;
 
@@ -139,6 +147,7 @@ pub mod high;
 /// let preview = preview_blogs(PathBuf::from_str(BLOG_ROOT).unwrap(), 2, None);
 /// let tags = get_blog_tag_list(PathBuf::from_str(BLOG_ROOT).unwrap());
 /// let blog_post = render_blog_post(PathBuf::from_str(BLOG_ROOT).unwrap(), date, slug, None).unwrap();
+/// let sitemap = create_sitemap(BLOG_ROOT, URL, &SitemapOptions::default());
 /// ```
 pub mod low;
 
@@ -149,7 +158,7 @@ pub mod low;
 /// ```rust,ignore
 /// lazy_static! {
 ///     pub static ref STATIC_BLOG_ENTRIES: MediumBlog =
-///         get_medium_blog(PathBuf::from(BLOG_ROOT), None, None);
+///         get_medium_blog(PathBuf::from(BLOG_ROOT), None, None, URL, &SitemapOptions::Default());
 ///     }
 ///
 /// let this_blog = match all_blogs.hash.get(&complete_slug) {

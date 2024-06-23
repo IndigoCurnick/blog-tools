@@ -3,6 +3,7 @@ use std::{fs, path::PathBuf, str::FromStr};
 use blog_tools::{
     medium::{get_medium_blog, MediumBlog, MediumBlogEntry},
     sitemap::SitemapOptions,
+    Blog,
 };
 use lazy_static::lazy_static;
 use rocket::{
@@ -78,7 +79,7 @@ fn tag_page(slug: String) -> Option<Template> {
     let mut these_blogs: Vec<&MediumBlogEntry> = vec![];
 
     for blog in &all_blogs.entries {
-        if blog.tags.contains(&slug) {
+        if blog.get_tags().contains(&slug) {
             these_blogs.push(&blog);
         }
     }

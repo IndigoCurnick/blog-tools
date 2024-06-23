@@ -107,22 +107,7 @@ impl Blog for HighBlogEntry {
 
         let toc = toc(&markdown, toc_generation_func)?;
 
-        return Ok(HighBlogEntry {
-            title: json.title,
-            date: json.date,
-            desc: json.desc,
-            html: html,
-            slug: json.slug,
-            tags: json.tags,
-            toc: toc,
-            keywords: json.keywords,
-            canonical_link: json.canonical_link,
-            author_name: json.author_name,
-            author_webpage: json.author_webpage,
-            preview,
-            last_modified: json.last_modified,
-            priority: json.priority,
-        });
+        return Ok(HighBlogEntry::new(json, html, toc, preview));
     }
 
     fn get_title(&self) -> String {
@@ -193,7 +178,7 @@ impl HighBlogEntry {
             date: json.date,
             desc: json.desc,
             html: html,
-            slug: format!("{}/{}", json.date, json.slug),
+            slug: json.slug,
             tags: json.tags,
             toc: toc,
             keywords: json.keywords,

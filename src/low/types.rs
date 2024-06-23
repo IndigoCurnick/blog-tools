@@ -1,7 +1,13 @@
+use std::fs;
+
 use chrono::NaiveDate;
+use markdown::{to_html_with_options, Options};
 use serde::{Deserialize, Serialize};
 
-use crate::{common::BlogJson, types::Blog};
+use crate::{
+    common::{get_json_data, preview::get_preview, toc, BlogError, BlogJson},
+    types::Blog,
+};
 
 /// An individual blog post
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -28,6 +34,9 @@ pub struct LowBlogEntry {
     pub author_name: Option<String>,
     /// Optional URL for the author
     pub author_webpage: Option<String>,
+    last_modified: Option<NaiveDate>,
+    priority: Option<f64>,
+    previw_chars: Option<usize>,
 }
 
 impl Blog for LowBlogEntry {
@@ -36,66 +45,108 @@ impl Blog for LowBlogEntry {
         toc_generation_func: Option<&dyn Fn(&markdown::mdast::Node) -> String>,
         preview_chars: Option<usize>,
     ) -> Result<Self, crate::common::BlogError> {
-        todo!();
+        let json = get_json_data(&blog)?;
+
+        let markdown = match fs::read_to_string(blog) {
+            Ok(x) => x,
+            Err(y) => return Err(BlogError::File(y)),
+        };
+
+        let html = match to_html_with_options(
+            &markdown,
+            &Options {
+                compile: markdown::CompileOptions {
+                    allow_dangerous_html: true,
+                    allow_dangerous_protocol: true,
+
+                    ..markdown::CompileOptions::default()
+                },
+                ..markdown::Options::default()
+            },
+        ) {
+            Ok(x) => x,
+            Err(y) => return Err(BlogError::Markdown(y)),
+        };
+
+        let toc = toc(&markdown, toc_generation_func)?;
+
+        return Ok(LowBlogEntry {
+            title: json.title,
+            date: json.date,
+            desc: json.desc,
+            html: html,
+            slug: json.slug,
+            tags: json.tags,
+            toc: toc,
+            keywords: json.keywords,
+            canonical_link: json.canonical_link,
+            author_name: json.author_name,
+            author_webpage: json.author_webpage,
+            last_modified: json.last_modified,
+            priority: json.priority,
+            previw_chars: preview_chars,
+        });
     }
     fn get_title(&self) -> String {
-        todo!()
+        return self.title.clone();
     }
 
     fn get_date_listed(&self) -> NaiveDate {
-        todo!()
+        return self.date.clone();
     }
 
     fn get_description(&self) -> Option<String> {
-        todo!()
+        return self.desc.clone();
     }
 
     fn get_html(&self) -> String {
-        todo!()
+        return self.html.clone();
     }
 
     fn get_full_slug(&self) -> String {
-        todo!()
+        return format!("{}/{}", self.get_date_listed(), self.get_part_slug());
     }
 
     fn get_part_slug(&self) -> String {
-        todo!()
+        return self.slug.clone();
     }
 
     fn get_tags(&self) -> Vec<String> {
-        todo!()
+        return self.tags.clone();
     }
 
     fn get_table_of_contents(&self) -> Option<String> {
-        todo!()
+        return self.toc.clone();
     }
 
     fn get_keywords(&self) -> Option<Vec<String>> {
-        todo!()
+        return self.keywords.clone();
     }
 
     fn get_canonicle_link(&self) -> Option<String> {
-        todo!()
+        return self.canonical_link.clone();
     }
 
     fn get_author_name(&self) -> Option<String> {
-        todo!()
+        return self.author_name.clone();
     }
 
     fn get_author_webpage(&self) -> Option<String> {
-        todo!()
+        return self.author_webpage.clone();
     }
 
     fn get_preview(&self) -> String {
-        todo!()
+        let preview = get_preview(&self.html, self.previw_chars);
+
+        return preview;
     }
 
     fn get_last_modified(&self) -> Option<NaiveDate> {
-        todo!()
+        return self.last_modified.clone();
     }
 
     fn get_priority(&self) -> Option<f64> {
-        todo!()
+        return self.priority.clone();
     }
 }
 
@@ -106,18 +157,20 @@ impl LowBlogEntry {
             date: json.date,
             desc: json.desc,
             html: html,
-            slug: format!("{}/{}", json.date, json.slug),
+            slug: json.slug,
             tags: json.tags,
             toc: toc,
             keywords: json.keywords,
             canonical_link: json.canonical_link,
             author_name: json.author_name,
             author_webpage: json.author_webpage,
+            last_modified: json.last_modified,
+            priority: json.priority,
+            previw_chars: None,
         };
     }
 }
 
-// TODO: What to do with this? Maybe we can implement `Blog` also?
 /// An individual blog post
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PreviewBlogEntry {
@@ -149,7 +202,7 @@ impl PreviewBlogEntry {
             title: json.title,
             date: json.date,
             desc: json.desc,
-            slug: format!("{}/{}", json.date, json.slug),
+            slug: json.slug,
             tags: json.tags,
             keywords: json.keywords,
             canonical_link: json.canonical_link,

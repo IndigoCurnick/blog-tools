@@ -81,19 +81,19 @@ pub fn get_json_data<T: AsRef<Path>>(blog: T) -> Result<BlogJson, BlogError> {
 
     let file_name = match blog.file_name() {
         Some(x) => x,
-        None => todo!(),
+        None => return Err(BlogError::FileNotFound),
     };
 
     let file_str = match file_name.to_str() {
         Some(x) => x,
-        None => todo!(),
+        None => return Err(BlogError::FileNotFound),
     };
 
     let name_split: Vec<&str> = file_str.split(".").collect();
 
     let n = match name_split.get(0) {
         Some(&x) => x,
-        None => todo!(),
+        None => return Err(BlogError::ImproperFileName(file_str.to_string())),
     };
 
     let name = format!("{}.json", n);

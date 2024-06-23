@@ -43,8 +43,6 @@ pub fn get_high_blog<T: AsRef<Path>>(
     );
 }
 
-// TODO: I will make a new function which will handle getting the list of blogs and tags, and I should use that here
-// TODO: I also wonder if using the `Blog` trait I can abstract this code even more for Medium and Low?
 fn get_blog_entries<T: AsRef<Path>>(
     base: T,
     toc_generation_func: Option<&dyn Fn(&Node) -> String>,

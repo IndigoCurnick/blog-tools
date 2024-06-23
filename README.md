@@ -17,7 +17,7 @@ next to a `blog.json`.
 
 The JSON must conform to the following schema
 
-```rust,ignore
+```json,ignore
 {
 "title": String,
 "date": ISO 8601 Date i.e. YYYY-MM-DD,
@@ -27,7 +27,9 @@ The JSON must conform to the following schema
 "keywords": Optional<[String]>,
 "canonical_link": Optional<String>,
 "author_name": Optional<String>,
-"author_webpage": Optional<String>
+"author_webpage": Optional<String>,
+"last_modified": Optional<Date>, (ISO 8601)
+"priority": Optional<float>
 }
 ```
 
@@ -36,7 +38,6 @@ The JSON must conform to the following schema
 In `blog-tools` all slugs are /{date}/{sub-slug}.
 
 Make sure the "slug" filed in the JSON is *just* the final sub-slug
-- `blog-tools` will automatically handle the date for you
 
 ## How This Crate is Organised
 
@@ -56,7 +57,7 @@ the best way to do this is using a lazy static like so
 ```rust,ignore
 lazy_static! {
     pub static ref STATIC_BLOG_ENTRIES: HighBlog =
-        get_high_blog(PathBuf::from(BLOG_ROOT), None, None);
+        get_high_blog(PathBuf::from(BLOG_ROOT), None, None, URL, &SitemapOptions::default());
     }
 ```
 
@@ -66,7 +67,7 @@ blog posts themselves. These will need to be rendered when requested
 ```rust,ignore
 lazy_static! {
     pub static ref STATIC_BLOG_ENTRIES: MediumBlog =
-        get_medium_blog(PathBuf::from(BLOG_ROOT), None, None);
+        get_medium_blog(PathBuf::from(BLOG_ROOT), None, None, URL, &SitemapOptions::default());
     }
 
 let this_blog = match all_blogs.hash.get(&complete_slug) {
@@ -88,6 +89,7 @@ everything at runtime.
 let preview = preview_blogs(PathBuf::from_str(BLOG_ROOT).unwrap(), 2, None);
 let tags = get_blog_tag_list(PathBuf::from_str(BLOG_ROOT).unwrap());
 let blog_post = render_blog_post(PathBuf::from_str(BLOG_ROOT).unwrap(), date, slug, None).unwrap();
+let sitemap = create_sitemap(BLOG_ROOT, URL, &SitemapOptions::default());
 ```
 
 This method can have serious runtime performance implecations, but might be
