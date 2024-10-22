@@ -65,7 +65,7 @@ impl Blog for LowBlogEntry {
             },
         ) {
             Ok(x) => x,
-            Err(y) => return Err(BlogError::Markdown(y)),
+            Err(y) => return Err(BlogError::Markdown(y.to_string())),
         };
 
         let toc = toc(&markdown, toc_generation_func)?;

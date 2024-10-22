@@ -115,7 +115,7 @@ pub fn toc(
     return if let Some(toc_gen) = toc_generation_func {
         let mdast = match to_mdast(&markdown, &ParseOptions::default()) {
             Ok(x) => x,
-            Err(y) => return Err(BlogError::Markdown(y)),
+            Err(y) => return Err(BlogError::Markdown(y.to_string())),
         };
 
         Ok(Some(toc_gen(&mdast)))

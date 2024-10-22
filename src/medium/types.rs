@@ -95,7 +95,7 @@ impl Blog for MediumBlogEntry {
             },
         ) {
             Ok(x) => x,
-            Err(y) => return Err(BlogError::Markdown(y)),
+            Err(y) => return Err(BlogError::Markdown(y.to_string())),
         };
 
         let preview: String = get_preview(&html, preview_chars);
@@ -223,7 +223,7 @@ impl MediumBlogEntry {
             },
         ) {
             Ok(x) => x,
-            Err(y) => return Err(BlogError::Markdown(y)),
+            Err(y) => return Err(BlogError::Markdown(y.to_string())),
         };
 
         let high = HighBlogEntry::new_from_medium(self, html);

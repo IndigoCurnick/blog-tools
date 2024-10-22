@@ -136,7 +136,7 @@ pub fn preview_blogs_tagged<T: AsRef<Path>>(
             },
         ) {
             Ok(x) => x,
-            Err(y) => return Err(BlogError::Markdown(y)),
+            Err(y) => return Err(BlogError::Markdown(y.to_string())),
         };
 
         let preview = get_preview(&html, preview_length);
@@ -232,7 +232,7 @@ pub fn render_blog_post<T: AsRef<Path>>(
             },
         ) {
             Ok(x) => x,
-            Err(y) => return Err(BlogError::Markdown(y)),
+            Err(y) => return Err(BlogError::Markdown(y.to_string())),
         };
 
         let toc = toc(&md, toc_generation_func)?;
@@ -318,7 +318,7 @@ pub fn preview_blogs<T: AsRef<Path>>(
             },
         ) {
             Ok(x) => x,
-            Err(y) => return Err(BlogError::Markdown(y)),
+            Err(y) => return Err(BlogError::Markdown(y.to_string())),
         };
 
         let preview: String = get_preview(&html, preview_length);

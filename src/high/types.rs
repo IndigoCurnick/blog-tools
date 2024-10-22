@@ -100,7 +100,7 @@ impl Blog for HighBlogEntry {
             },
         ) {
             Ok(x) => x,
-            Err(y) => return Err(BlogError::Markdown(y)),
+            Err(y) => return Err(BlogError::Markdown(y.to_string())),
         };
 
         let preview: String = get_preview(&html, preview_chars);
